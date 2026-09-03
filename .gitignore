@@ -48,3 +48,13 @@ Thumbs.db
 
 # Codespaces 데모가 만드는 폴더
 .demo-home/
+
+# 빌드 산출물 — 저장소가 아니라 릴리스로 배포한다.
+# 15MB 짜리 바이너리를 커밋하면 이력에 영구히 쌓인다.
+dist/
+staging/
+*.spec.bak
+*.dmg
+*.zip
+*.tar.gz
+*.sha256

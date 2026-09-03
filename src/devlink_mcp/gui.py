@@ -245,10 +245,21 @@ def mcp_config_path() -> Path:
 def launcher_command(paths: Paths) -> dict:
     """How the MCP client should start our SSH server.
 
-    ``sys.executable -m devlink_mcp`` rather than the ``devlink`` script: it
-    may not be on PATH for a GUI application launched from a desktop shortcut,
-    while the interpreter path always resolves.
+    Two shapes, because there are two ways this can be installed.
+
+    Frozen (the downloadable build): ``sys.executable`` *is* the application,
+    so it takes the subcommand directly. Passing ``-m devlink_mcp`` to it would
+    be nonsense — there is no interpreter to accept that flag.
+
+    Installed from pip: use the interpreter and ``-m`` rather than the
+    ``devlink`` script, which may not be on PATH for a desktop application
+    started from a shortcut.
     """
+    if getattr(sys, "frozen", False):
+        return {
+            "command": sys.executable,
+            "args": ["serve", "--home", str(paths.root)],
+        }
     return {
         "command": sys.executable,
         "args": ["-m", "devlink_mcp", "serve", "--home", str(paths.root)],
@@ -266,7 +277,9 @@ def is_registered(paths: Paths, name: str = "devlink") -> bool:
     entry = (data.get("mcpServers") or {}).get(name)
     if not entry:
         return False
-    return "devlink_mcp" in " ".join(entry.get("args", []))
+    # A frozen build's entry has no "devlink_mcp" argument — the executable
+    # itself is the thing. Compare against what we would write today.
+    return entry.get("args") == launcher_command(paths)["args"]
 
 
 def register(paths: Paths, name: str = "devlink") -> dict:
