@@ -8,6 +8,12 @@ Notable changes to this project. The format follows
 
 ### Added
 
+- The settings panel notices a newer release and shows a link. Checked once a
+  day against the GitHub releases API, cached, and skipped entirely with
+  `DEVLINK_NO_UPDATE_CHECK=1`. It never downloads or replaces anything.
+
+### Added
+
 - `devlink serve` — DevLink-MCP is now an MCP server itself, over stdio, using
   paramiko. Node.js is no longer required anywhere.
 - Uploads through MCP copy the file they replace into the site's backup

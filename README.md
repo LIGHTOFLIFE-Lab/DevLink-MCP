@@ -68,6 +68,26 @@ changing how you work:
   the client — changed a file directly, it stops instead of destroying their
   work.
 
+## Keeping it up to date
+
+Releases are built by GitHub, not by hand. Pushing a tag builds all four
+artifacts on their own runners, smoke-tests each one, and attaches them to a
+release:
+
+```bash
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The settings panel checks once a day whether a newer release exists and shows a
+line with a link when there is one. It never downloads or replaces anything —
+these builds are unsigned, and a program that silently swaps its own executable
+for a file from the network is a habit worth not having.
+
+That check is one request to `api.github.com` and nothing else. Turn it off with
+`DEVLINK_NO_UPDATE_CHECK=1`, or by never running the panel. Installed from pip?
+`pip install --upgrade devlink-mcp` as usual.
+
 ## Try it without installing anything
 
 Press **Open in GitHub Codespaces** above. It builds a container, installs the

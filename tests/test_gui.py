@@ -254,3 +254,41 @@ def test_korean_catalogue_covers_english():
 
     missing = set(MESSAGES["en"]) - set(MESSAGES["ko"])
     assert missing == set(), f"untranslated keys: {sorted(missing)}"
+
+
+# --------------------------------------------------------------------------
+# update banner
+# --------------------------------------------------------------------------
+
+def test_state_carries_the_update_result(panel, monkeypatch):
+    from devlink_mcp import update
+
+    monkeypatch.setattr(update, "_state", {"current": "0.1.0", "latest": "v9.9.9",
+                                           "newer": True, "url": "https://example.invalid"})
+    assert panel.get("/api/state")["update"]["newer"] is True
+
+
+def test_state_is_fine_with_no_update_result(panel, monkeypatch):
+    from devlink_mcp import update
+
+    monkeypatch.setattr(update, "_state", {})
+    assert panel.get("/api/state")["update"] == {}
+
+
+def test_opening_the_panel_never_waits_on_the_network(tmp_path, monkeypatch):
+    """The check runs in the background; a hanging GitHub must not delay startup."""
+    import time
+    from devlink_mcp import update
+    from devlink_mcp.config import Paths
+
+    def slow():
+        time.sleep(5)
+        return None
+
+    monkeypatch.setattr(update, "_fetch", slow)
+    paths = Paths(tmp_path / "home")
+    paths.ensure()
+
+    started = time.monotonic()
+    update.start_background_check(paths.root)
+    assert time.monotonic() - started < 1.0, "startup waited for the update check"

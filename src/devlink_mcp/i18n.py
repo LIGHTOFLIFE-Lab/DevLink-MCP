@@ -26,6 +26,10 @@ MESSAGES: dict[str, dict[str, str]] = {
         "app.close": "Close this panel",
         "app.closed": "Panel closed. You can close this tab.",
         "app.recheck": "Check again",
+        "update.available": "Version {latest} is available (you have {current}).",
+        "update.download": "Download",
+        "update.dismiss": "Not now",
+
         # --- environment ------------------------------------------------
         "env.title": "Environment",
         "env.node": "Node.js",
@@ -205,6 +209,10 @@ MESSAGES: dict[str, dict[str, str]] = {
         "app.close": "설정 화면 닫기",
         "app.closed": "설정 화면을 닫았습니다. 이 탭을 닫으셔도 됩니다.",
         "app.recheck": "다시 확인",
+        "update.available": "{latest} 버전이 나왔습니다 (현재 {current}).",
+        "update.download": "받으러 가기",
+        "update.dismiss": "나중에",
+
         "env.title": "실행 환경",
         "env.node": "Node.js",
         "env.npx": "npx",

@@ -80,6 +80,16 @@ Passwords do pass through the browser during a WinSCP import, because the page
 carries them from the import step to the save step. Over loopback, to the same
 user, into a file that stores them in plain text anyway.
 
+### The update check
+
+The settings panel asks `api.github.com` once a day whether a newer release
+exists. It sends nothing but the request itself — no identifiers, no
+configuration, no server names. The answer is cached for a day, including a
+failed one, so a machine without a network does not retry on every launch.
+
+It never downloads or installs anything. `DEVLINK_NO_UPDATE_CHECK=1` disables
+it entirely.
+
 ### Archive extraction
 
 Content pulled from a server is unpacked with path traversal checks, and

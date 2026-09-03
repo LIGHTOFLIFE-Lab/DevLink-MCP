@@ -36,6 +36,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from . import config as cfg
+from . import update as update_check
 from . import winscp
 from .config import Paths
 from .i18n import catalogue, language, t
@@ -453,6 +454,7 @@ def make_handler(paths: Paths, token: str):
                     "keys": list_keys(paths),
                     "keys_dir": str(paths.keys),
                     "registered": is_registered(paths),
+                    "update": update_check.state(),
                     "mcp_config": str(mcp_config_path()),
                 })
                 return
@@ -543,6 +545,10 @@ def serve(paths: Paths, open_browser: bool = True, port: int = 0) -> int:
     token = secrets.token_urlsafe(16)
     handler = make_handler(paths, token)
 
+    # Fire and forget. The panel must open at the same speed whether or not
+    # GitHub answers, so nothing waits on this.
+    update_check.start_background_check(paths.root)
+
     with _Server(("127.0.0.1", port), handler) as httpd:
         bound = httpd.server_address[1]
         url = f"http://127.0.0.1:{bound}/?t={token}"
@@ -626,6 +632,10 @@ PAGE = r"""<!doctype html>
   .msg b{display:block;margin-bottom:4px}
   .msg ul{margin:4px 0 0;padding-left:18px}
   .empty{color:var(--dim);text-align:center;padding:22px 0;font-size:13px}
+  .update{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+          border:1px solid var(--accent);border-radius:10px;
+          padding:12px 16px;margin-bottom:16px;font-size:13px}
+  .update a{color:var(--accent)}
   code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:12px;
        word-break:break-all}
 </style>
@@ -635,6 +645,7 @@ PAGE = r"""<!doctype html>
   <h1 id="h_title"></h1>
   <div class="sub">__ROOT__</div>
   <div id="problem"></div>
+  <div id="update"></div>
 
   <div class="card">
     <h2><span class="step">1</span><span id="h_env"></span></h2>
@@ -984,6 +995,11 @@ async function quit(){
     T("app.closed") + "</div></div>";
 }
 
+function dismissUpdate(){
+  try { sessionStorage.setItem("devlink-update-dismissed", "1"); } catch (e) {}
+  $("update").innerHTML = "";
+}
+
 async function load(){
   const st = await api("/api/state");
   servers = st.servers; keys = st.keys || []; keysDir = st.keys_dir || "";
@@ -1002,6 +1018,18 @@ async function load(){
     $("saveBtn").disabled = true;
   } else {
     $("problem").innerHTML = ""; $("saveBtn").disabled = false;
+  }
+
+  const up = st.update || {};
+  if(up.newer && !sessionStorage.getItem("devlink-update-dismissed")){
+    $("update").innerHTML =
+      '<div class="update"><span>' +
+      esc(T("update.available", {latest: up.latest, current: up.current})) +
+      '</span><a href="' + esc(up.url) + '" target="_blank" rel="noopener noreferrer">' +
+      T("update.download") + '</a>' +
+      '<button onclick="dismissUpdate()">' + T("update.dismiss") + '</button></div>';
+  } else {
+    $("update").innerHTML = "";
   }
 
   $("regState").textContent = st.registered ? T("mcp.registered")
