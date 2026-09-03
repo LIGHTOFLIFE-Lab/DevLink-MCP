@@ -11,3 +11,13 @@
 *.py   text eol=lf
 *.sh   text eol=lf
 *.md   text eol=lf
+
+# Shipped next to the download and opened in Notepad. Keeps its BOM and CRLF so
+# Windows renders it correctly; git must not normalise either.
+packaging/FIRST-RUN.txt  -text
+
+# Read by Python and by GitHub, never executed by Windows: keep LF so an
+# editor on Windows cannot turn the whole file into a diff.
+*.spec text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
