@@ -45,3 +45,6 @@ htmlcov/
 Thumbs.db
 *.swp
 *.tmp
+
+# Codespaces 데모가 만드는 폴더
+.demo-home/

@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Adds a "Run workflow" button on the Actions tab, so anyone can trigger the
+  # suite from the browser without pushing a commit.
+  workflow_dispatch:
 
 permissions:
   contents: read

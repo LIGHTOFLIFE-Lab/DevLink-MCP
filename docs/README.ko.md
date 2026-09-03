@@ -6,6 +6,11 @@
 만들어 AI 어시스턴트가 그 장비들을 다룰 수 있게 하고, 사이트를 내려받아
 쓰던 편집기로 고치게 해주고, 깃을 되돌리기 삼아 변경분을 올려줍니다.
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/LIGHTOFLIFE-Lab/DevLink-MCP)
+[![CI](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../LICENSE)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](../pyproject.toml)
+
 English: [../README.md](../README.md)
 
 > **상태: alpha.** 여기 적힌 기능은 동작하고 테스트로 덮여 있지만
@@ -30,6 +35,28 @@ DevLink-MCP 는 일하는 방식을 바꾸지 않으면서 그 위험만 걷어�
 - **남이 서버를 만졌는지 알아챕니다.** 쓰기 전에 마지막 배포 때 기록한 상태와
   서버를 대조합니다. 동료나 고객이 서버에서 직접 고쳤다면 그 작업을 지우는 대신
   멈춥니다.
+
+## 설치 없이 바로 해보기
+
+위의 **Open in GitHub Codespaces** 를 누르면 컨테이너가 만들어지고 패키지가
+설치된 터미널이 열립니다.
+
+```bash
+bash .devcontainer/demo.sh
+```
+
+한 사이클이 통째로 돕니다 — 사이트를 수집하고, 고치고, 배포하고, 누군가 서버를
+직접 만졌을 때 배포가 거부되는 것을 보고, 되돌리기까지. 서버 역할을 하는 로컬
+폴더를 상대로 하므로 SSH 도 자격증명도 필요 없고 뒷정리할 것도 없습니다.
+
+```bash
+pytest -q                                   # 전체 테스트 86개
+devlink gui --port 8765 --no-browser        # 설정 화면. 포트 8765 로 전달됩니다
+```
+
+> **Codespace 에 실제 자격증명을 넣지 마세요.** `servers.ini` 는 비밀번호를
+> 평문으로 저장하고, 클라우드 개발 컨테이너는 고객사 서버를 다룰 곳이 아닙니다.
+> 실제 작업은 로컬에 설치해서 하세요.
 
 ## 설치
 

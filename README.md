@@ -7,6 +7,11 @@ locked-down configuration to an MCP server so an AI assistant can work on those
 machines, pulls a site down so you can edit it in your own editor, and puts
 your changes back with git as the undo button.
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/LIGHTOFLIFE-Lab/DevLink-MCP)
+[![CI](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](pyproject.toml)
+
 한국어 문서: [docs/README.ko.md](docs/README.ko.md)
 
 > **Status: alpha.** The interfaces described here work and are covered by
@@ -37,6 +42,29 @@ changing how you work:
   compares the server against what it recorded last time. If a colleague — or
   the client — changed a file directly, it stops instead of destroying their
   work.
+
+## Try it without installing anything
+
+Press **Open in GitHub Codespaces** above. It builds a container, installs the
+package, and drops you in a terminal.
+
+```bash
+bash .devcontainer/demo.sh
+```
+
+That runs a whole cycle — pull a site, edit it, deploy, watch a deployment get
+refused because someone changed the server, then roll back — against a local
+directory standing in for a server. No SSH, no credentials, nothing to undo.
+
+```bash
+pytest -q                                   # the full suite, 86 tests
+devlink gui --port 8765 --no-browser        # the settings panel, on the
+                                            # forwarded port 8765
+```
+
+> Do not put real credentials in a Codespace. `servers.ini` stores passwords in
+> plain text, and a cloud development container is not the place for your
+> customers' servers. Install locally for real work.
 
 ## Install
 

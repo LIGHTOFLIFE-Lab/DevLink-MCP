@@ -1,0 +1,39 @@
+{
+  "name": "DevLink-MCP",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+
+  // Installs the package and its test dependencies. The test suite needs a git
+  // identity because it makes real commits against a directory that stands in
+  // for a server, so set a throwaway one.
+  "postCreateCommand": "pip install --user -e '.[dev]' && git config --global user.name 'codespace' && git config --global user.email 'codespace@example.invalid' && git config --global init.defaultBranch main",
+
+  "postAttachCommand": {
+    "hint": "bash .devcontainer/welcome.sh"
+  },
+
+  // The settings panel picks a random port by default; the walkthrough pins it
+  // to this one so the forwarded URL is predictable.
+  "forwardPorts": [8765],
+  "portsAttributes": {
+    "8765": {
+      "label": "DevLink-MCP settings panel",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"],
+      "settings": {
+        "python.testing.pytestEnabled": true
+      }
+    }
+  },
+
+  "remoteEnv": {
+    // Keep the demo's files inside the workspace rather than the home
+    // directory, so everything it creates is visible in the file tree.
+    "DEVLINK_HOME": "${containerWorkspaceFolder}/.demo-home",
+    "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
+  }
+}
