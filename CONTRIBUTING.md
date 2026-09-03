@@ -5,7 +5,7 @@ Thanks for looking. Issues and pull requests are both welcome.
 ## Getting set up
 
 ```bash
-git clone https://github.com/OWNER/sshpier
+git clone https://github.com/kimajun0919/sshpier
 cd sshpier
 pip install -e '.[dev]'
 pytest

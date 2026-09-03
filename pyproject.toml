@@ -11,7 +11,7 @@ requires-python = ">=3.9"
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 keywords = ["ssh", "mcp", "sftp", "deploy", "rollback", "winscp", "web-maintenance"]
-authors = [{ name = "sshpier contributors" }]
+authors = [{ name = "kimajun0919" }]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
@@ -41,9 +41,9 @@ sync = ["paramiko>=2.11"]
 dev = ["pytest>=7", "paramiko>=2.11"]
 
 [project.urls]
-Homepage = "https://github.com/OWNER/sshpier"
-Issues = "https://github.com/OWNER/sshpier/issues"
-Changelog = "https://github.com/OWNER/sshpier/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/kimajun0919/sshpier"
+Issues = "https://github.com/kimajun0919/sshpier/issues"
+Changelog = "https://github.com/kimajun0919/sshpier/blob/main/CHANGELOG.md"
 
 [project.scripts]
 sshpier = "sshpier.cli:main"

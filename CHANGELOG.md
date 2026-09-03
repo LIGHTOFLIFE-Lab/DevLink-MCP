@@ -42,5 +42,5 @@ First public release.
 - MCP client configuration is written without a byte order mark, and the
   previous file is backed up first.
 
-[Unreleased]: https://github.com/OWNER/sshpier/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/OWNER/sshpier/releases/tag/v0.1.0
+[Unreleased]: https://github.com/kimajun0919/sshpier/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/kimajun0919/sshpier/releases/tag/v0.1.0
