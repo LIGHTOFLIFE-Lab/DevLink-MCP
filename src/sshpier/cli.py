@@ -58,6 +58,9 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("build", help="Write the MCP config from servers.ini")
     _add_common(p)
 
+    p = sub.add_parser("serve", help="Run the MCP server on stdio (for your MCP client)")
+    _add_common(p)
+
     p = sub.add_parser("init", help="Create the directory layout and an example file")
     _add_common(p)
 
@@ -184,6 +187,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Ready: {paths.root}")
         print(f"Edit:  {paths.ini}" + ("" if created else "  (already existed)"))
         return 0
+
+    if command == "serve":
+        from .mcpserver import serve as serve_mcp
+        return serve_mcp(paths)
 
     if command == "gui":
         from .gui import serve

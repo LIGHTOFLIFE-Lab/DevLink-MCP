@@ -41,7 +41,7 @@ changing how you work:
 ## Install
 
 ```bash
-pip install sshpier          # settings panel and config generation
+pip install sshpier          # settings panel, config, MCP server (no Node.js)
 pip install 'sshpier[sync]'  # adds pull / deploy / rollback (needs paramiko)
 ```
 
@@ -122,12 +122,15 @@ the commit history and re-deploys the previous version. Setting `backup` is
 still worth it — restoring from the server is faster and survives losing your
 machine — so `sshpier check` warns when it is missing.
 
-**Changes made outside sshpier are not backed up.** If an assistant edits a file
-through the MCP connection, or you upload with an SFTP client, that write does
-not pass through any of this. sshpier will notice on the next `deploy` and
-refuse rather than overwrite, and `pull` will bring the change into git — but
-the write itself had no safety net. Work through `pull` / `deploy` when you
-want the guarantee.
+**Uploads through MCP are backed up too.** sshpier is the MCP server, so when
+an assistant writes a file, the version being replaced is copied into the
+site's backup directory first. There is no configuration for this and no way to
+forget it.
+
+**Writes from other tools are not.** An SFTP client, or a different MCP server,
+bypasses all of this. sshpier will notice on the next `deploy` and refuse rather
+than overwrite, and `pull` brings the change into git — but that write itself
+had no safety net.
 
 ## Importing from WinSCP
 
@@ -161,17 +164,20 @@ More in [SECURITY.md](SECURITY.md).
 ## How the pieces fit
 
 ```
-servers.ini ──► sshpier ──┬──► ssh-mcp-config.json ──► MCP server ──► assistant
-                          │
-                          └──► sites.json ──► pull / deploy / rollback
-                                                    │
-                                              sites/<name>/  (a git repo)
+                    ┌──► sshpier serve ──► your MCP client ──► assistant
+servers.ini ──► sshpier
+                    └──► pull / deploy / rollback ──► sites/<name>/  (a git repo)
 ```
 
-The MCP side expects an MCP server that speaks SSH; the generated file matches
-the schema used by
-[`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server).
-The sync side is independent — you can use either half on its own.
+`sshpier serve` is an MCP server in its own right, speaking JSON-RPC over stdio
+and SSH over paramiko. It offers four tools — `list-servers`,
+`execute-command`, `upload`, `download` — and applies the allowlist, denylist,
+path limits, timeouts and output caps from your config. There is no Node.js
+anywhere in this.
+
+`sshpier build` still writes `ssh-mcp-config.json` for people who would rather
+point [`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server)
+at it. That server has no upload backups, which is why sshpier grew its own.
 
 ## Layout
 

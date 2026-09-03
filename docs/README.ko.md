@@ -34,7 +34,7 @@ sshpier 는 일하는 방식을 바꾸지 않으면서 그 위험만 걷어내�
 ## 설치
 
 ```bash
-pip install sshpier          # 설정 화면 + 설정 생성
+pip install sshpier          # 설정 화면 + 설정 생성 + MCP 서버 (Node.js 불필요)
 pip install 'sshpier[sync]'  # 수집/배포/롤백까지 (paramiko 필요)
 ```
 
@@ -112,10 +112,12 @@ sshpier rollback web1             # 서버를 되돌림
 이전 버전을 다시 배포합니다. 그래도 `backup` 을 두는 편이 낫습니다 — 서버에서
 복원하는 게 빠르고 이 PC 를 잃어도 남으니까요. 그래서 `sshpier check` 가 없으면 경고합니다.
 
-**sshpier 를 거치지 않은 변경은 백업되지 않습니다.** 어시스턴트가 MCP 연결로 파일을
-고치거나 SFTP 클라이언트로 올린 것은 이 흐름을 타지 않습니다. 다음 `deploy` 때
-sshpier 가 알아채고 덮어쓰기를 거부하며 `pull` 로 깃에 들일 수는 있지만, 그 쓰기
-자체에는 안전망이 없었습니다. 보장이 필요하면 `pull` / `deploy` 로 작업하세요.
+**MCP 업로드도 백업됩니다.** sshpier 자체가 MCP 서버이므로, 어시스턴트가 파일을
+쓰면 덮어쓰일 버전이 먼저 백업 폴더로 복사됩니다. 설정할 것도 없고 잊을 방법도 없습니다.
+
+**다른 도구로 쓴 것은 백업되지 않습니다.** SFTP 클라이언트나 다른 MCP 서버는 이
+흐름을 타지 않습니다. 다음 `deploy` 때 sshpier 가 알아채고 덮어쓰기를 거부하며
+`pull` 로 깃에 들일 수는 있지만, 그 쓰기 자체에는 안전망이 없었습니다.
 
 ## WinSCP 에서 가져오기
 
@@ -146,16 +148,19 @@ WinSCP 는 INI 파일(도구 > 환경 설정 내보내기/백업)이나 레지�
 ## 구조
 
 ```
-servers.ini ──► sshpier ──┬──► ssh-mcp-config.json ──► MCP 서버 ──► 어시스턴트
-                          │
-                          └──► sites.json ──► pull / deploy / rollback
-                                                    │
-                                              sites/<이름>/  (깃 저장소)
+                    ┌──► sshpier serve ──► MCP 클라이언트 ──► 어시스턴트
+servers.ini ──► sshpier
+                    └──► pull / deploy / rollback ──► sites/<이름>/  (깃 저장소)
 ```
 
-MCP 쪽은 SSH 를 다루는 MCP 서버를 전제로 하며, 생성되는 파일은
-[`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server)
-가 쓰는 형식입니다. 동기화 쪽은 독립적이라 둘 중 하나만 써도 됩니다.
+`sshpier serve` 는 그 자체가 MCP 서버입니다. stdio 로 JSON-RPC 를, paramiko 로
+SSH 를 말합니다. 도구 네 개(`list-servers`, `execute-command`, `upload`,
+`download`)를 제공하고 설정의 허용·차단 목록, 경로 제한, 타임아웃, 출력 상한을
+적용합니다. **Node.js 가 전혀 필요 없습니다.**
+
+`sshpier build` 는 여전히 `ssh-mcp-config.json` 을 만듭니다.
+[`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server) 를
+쓰고 싶은 분을 위한 것인데, 그쪽은 업로드 백업이 없습니다. 그래서 직접 만들었습니다.
 
 ## 폴더 구조
 

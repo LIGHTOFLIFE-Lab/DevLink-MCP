@@ -38,6 +38,8 @@ MESSAGES: dict[str, dict[str, str]] = {
         "env.hint.npx": "Ships with Node.js",
         "env.hint.git": "Needed for pulling and deploying sites",
         "env.hint.python": "",
+        "env.paramiko": "paramiko",
+        "env.hint.paramiko": "Needed to reach servers. Install with: pip install 'sshpier[sync]'",
         # --- server list ------------------------------------------------
         "servers.title": "Servers",
         "servers.name": "Name",
@@ -214,6 +216,8 @@ MESSAGES: dict[str, dict[str, str]] = {
         "env.hint.npx": "Node.js 를 설치하면 같이 들어옵니다",
         "env.hint.git": "사이트 수집·배포에 필요합니다",
         "env.hint.python": "",
+        "env.paramiko": "paramiko",
+        "env.hint.paramiko": "Needed to reach servers. Install with: pip install 'sshpier[sync]'",
         "servers.title": "서버 목록",
         "servers.name": "이름",
         "servers.connection": "접속",

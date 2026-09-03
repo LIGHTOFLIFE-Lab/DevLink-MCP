@@ -6,6 +6,21 @@ Notable changes to this project. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `sshpier serve` — sshpier is now an MCP server itself, over stdio, using
+  paramiko. Node.js is no longer required anywhere.
+- Uploads through MCP copy the file they replace into the site's backup
+  directory before writing.
+
+### Changed
+
+- The settings panel registers `sshpier serve` with the MCP client instead of
+  an external Node package. `sshpier build` still writes `ssh-mcp-config.json`
+  for anyone who prefers that server.
+- The environment check no longer asks for Node.js or npx; it checks for
+  paramiko instead.
+
 ## [0.1.0] — 2026-09-03
 
 First public release.

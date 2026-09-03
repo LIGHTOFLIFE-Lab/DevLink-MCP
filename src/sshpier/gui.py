@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import base64
 import http.server
+import importlib.util
 import json
 import os
 import re
@@ -174,22 +175,17 @@ def check_env() -> list[dict]:
         except Exception:
             return ""
 
-    node = shutil.which("node")
-    items = [{
-        "name": t("env.node"), "ok": bool(node),
-        "detail": (version_of(node) if node else t("env.missing")),
-        "hint": t("env.hint.node"),
-    }]
-    npx = shutil.which("npx") or shutil.which("npx.cmd")
-    items.append({"name": t("env.npx"), "ok": bool(npx),
-                  "detail": t("env.present") if npx else t("env.missing"),
-                  "hint": t("env.hint.npx")})
-    items.append({"name": t("env.python"), "ok": True,
-                  "detail": sys.version.split()[0], "hint": ""})
+    items = [{"name": t("env.python"), "ok": True,
+              "detail": sys.version.split()[0], "hint": ""}]
     git = shutil.which("git")
     items.append({"name": t("env.git"), "ok": bool(git),
                   "detail": t("env.present") if git else t("env.missing"),
                   "hint": t("env.hint.git")})
+
+    paramiko_present = importlib.util.find_spec("paramiko") is not None
+    items.append({"name": t("env.paramiko"), "ok": paramiko_present,
+                  "detail": t("env.present") if paramiko_present else t("env.missing"),
+                  "hint": t("env.hint.paramiko")})
     return items
 
 
@@ -247,11 +243,15 @@ def mcp_config_path() -> Path:
 
 
 def launcher_command(paths: Paths) -> dict:
-    """How the MCP client should start the SSH server."""
+    """How the MCP client should start our SSH server.
+
+    ``sys.executable -m sshpier`` rather than the ``sshpier`` script: the script
+    may not be on PATH for a GUI application launched from a desktop shortcut,
+    while the interpreter path always resolves.
+    """
     return {
-        "command": "npx",
-        "args": ["-y", "@fangjunjie/ssh-mcp-server",
-                 "--config-file", str(paths.mcp_json)],
+        "command": sys.executable,
+        "args": ["-m", "sshpier", "serve", "--home", str(paths.root)],
     }
 
 
@@ -264,7 +264,9 @@ def is_registered(paths: Paths, name: str = "ssh") -> bool:
     except (json.JSONDecodeError, OSError):
         return False
     entry = (data.get("mcpServers") or {}).get(name)
-    return bool(entry) and str(paths.mcp_json) in " ".join(entry.get("args", []))
+    if not entry:
+        return False
+    return "sshpier" in " ".join(entry.get("args", []))
 
 
 def register(paths: Paths, name: str = "ssh") -> dict:
