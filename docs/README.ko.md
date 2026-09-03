@@ -1,0 +1,165 @@
+# sshpier
+
+관리하는 서버들을 한곳에서 다루는 로컬 도구.
+
+서버 정보를 평문 파일 하나에 적어두면, sshpier 가 그것으로 MCP 서버 설정을
+만들어 AI 어시스턴트가 그 장비들을 다룰 수 있게 하고, 사이트를 내려받아
+쓰던 편집기로 고치게 해주고, 깃을 되돌리기 삼아 변경분을 올려줍니다.
+
+English: [../README.md](../README.md)
+
+> **상태: alpha.** 여기 적힌 기능은 동작하고 테스트로 덮여 있지만
+> 아직 어린 프로젝트라 세부는 바뀔 수 있습니다.
+
+---
+
+## 왜 만들었나
+
+남의 웹사이트를 유지보수하다 보면 SFTP 클라이언트에 세션이 수십 개 쌓이고,
+사이트마다 로컬 사본을 만드는 게 품이 아까워 결국 서버에서 직접 고치게 됩니다.
+그러다 뭔가를 덮어쓰고 되돌릴 방법이 없는 날이 옵니다.
+
+sshpier 는 일하는 방식을 바꾸지 않으면서 그 위험만 걷어내는 최소한의 장치입니다.
+
+- **설정 하나, 소비처 여럿.** 관리하는 파일은 `servers.ini` 하나뿐입니다.
+  여기서 MCP 설정과 배포 설정이 생성되므로 둘이 어긋날 수 없습니다.
+- **신경 쓰지 않아도 붙는 안전장치.** 생성되는 모든 연결에 파괴적 명령 차단,
+  지정한 폴더로 한정된 경로 허용, 명령 타임아웃, 출력 상한이 자동으로 붙습니다.
+- **되돌릴 수 있는 배포.** 변경된 파일만 올리고, 덮어쓸 파일은 서버에 먼저
+  백업하고, 배포마다 깃 태그를 남깁니다.
+- **남이 서버를 만졌는지 알아챕니다.** 쓰기 전에 마지막 배포 때 기록한 상태와
+  서버를 대조합니다. 동료나 고객이 서버에서 직접 고쳤다면 그 작업을 지우는 대신
+  멈춥니다.
+
+## 설치
+
+```bash
+pip install sshpier          # 설정 화면 + 설정 생성
+pip install 'sshpier[sync]'  # 수집/배포/롤백까지 (paramiko 필요)
+```
+
+Python 3.9 이상. 화면과 설정 생성은 표준 라이브러리만 씁니다.
+`paramiko` 는 실제로 서버에 붙을 때만 필요합니다.
+
+## 시작하기
+
+```bash
+sshpier init     # 폴더 골격 생성
+sshpier gui      # 브라우저에 설정 화면 열기
+```
+
+화면이 순서대로 안내합니다. 실행 환경 점검 → 서버 추가(WinSCP 에서 한 번에
+가져오기 가능) → MCP 클라이언트에 등록.
+
+터미널이 편하면:
+
+```bash
+sshpier import ~/Desktop/WinSCP.ini   # 저장된 세션 가져오기
+sshpier check                         # 쓰지 않고 검사만
+sshpier build                         # MCP 설정 생성
+```
+
+## 서버 한 개는 이렇게 생겼습니다
+
+```ini
+[DEFAULT]
+port    = 22
+exclude = data/, uploads/, cache/, *.log, node_modules/, .env
+
+[web1]
+host     = 10.0.0.1
+user     = deploy
+key      = ~/.sshpier/config/keys/web1.pem
+remote   = /var/www/html
+backup   = /var/backup/sshpier
+allow    = ^ls( .*)?|^cat .*|^grep .*
+```
+
+서버당 여섯 줄입니다. 이 중 `exclude` 를 제대로 잡는 게 중요합니다.
+고객 업로드 파일과 로그를 작업 사본에서 빼주는데, 이게 저장소 크기가
+수 MB 냐 수 GB 냐를 가릅니다.
+
+전체 항목은 [`examples/servers.example.ini`](../examples/servers.example.ini) 참고.
+
+## 사이트 작업
+
+```bash
+sshpier pull web1                 # 서버의 현재 상태를 받아 커밋
+# ... 로컬에서 고치고 원하는 만큼 커밋 ...
+sshpier deploy web1               # 변경분만 올리고 태그
+sshpier status web1               # 로컬 · 서버 · 마지막 배포 비교
+sshpier rollback web1             # 서버를 되돌림
+```
+
+`pull` 을 먼저 하는 건 형식이 아닙니다. 그게 `rollback` 이 돌아갈 지점을
+만들어 주고, 지난번 이후 누가 서버를 건드렸는지 알게 되는 시점입니다.
+
+## WinSCP 에서 가져오기
+
+WinSCP 는 INI 파일(도구 > 환경 설정 내보내기/백업)이나 레지스트리 덤프로
+내보냅니다. 둘 다 읽으며, 확장자가 아니라 내용을 보고 형식을 판단합니다.
+
+주소·포트·계정·키 경로·프록시가 넘어옵니다. **저장된 비밀번호도 함께 넘어옵니다.**
+단 WinSCP 마스터 비밀번호가 걸린 세션은 풀 수 없으므로 빈칸으로 남습니다.
+
+## 비밀번호에 대해
+
+스스로 판단하실 수 있도록 두 가지를 분명히 해둡니다.
+
+**`servers.ini` 는 비밀번호를 평문으로 저장합니다.** 그 파일을 읽을 수 있는
+사람은 비밀번호를 읽을 수 있습니다. 개인키 인증을 쓰면 이 문제가 없고,
+예시도 그렇게 되어 있습니다. config 폴더는 본인만 읽도록 두세요.
+
+**sshpier 는 WinSCP 저장 비밀번호를 복호화할 수 있습니다.** 마스터 비밀번호가
+없으면 WinSCP 는 비밀번호를 암호화가 아니라 가역 난독화로 저장합니다.
+구현은 [`src/sshpier/winscp.py`](../src/sshpier/winscp.py) 에 있고 공개된
+알고리즘을 보고 새로 쓴 것으로, WinSCP 코드는 들어 있지 않습니다.
+세션 쉰 개를 옮기면서 비밀번호 쉰 개를 다시 타이핑하지 않기 위한 기능입니다.
+이 기능이 디스크에 있는 게 싫으시면 `decrypt_password` 의 본문을 지우세요.
+가져오기는 실패를 "비밀번호 없음" 으로 처리하고 빈칸으로 둡니다.
+
+자세한 내용은 [SECURITY.md](../SECURITY.md).
+
+## 구조
+
+```
+servers.ini ──► sshpier ──┬──► ssh-mcp-config.json ──► MCP 서버 ──► 어시스턴트
+                          │
+                          └──► sites.json ──► pull / deploy / rollback
+                                                    │
+                                              sites/<이름>/  (깃 저장소)
+```
+
+MCP 쪽은 SSH 를 다루는 MCP 서버를 전제로 하며, 생성되는 파일은
+[`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server)
+가 쓰는 형식입니다. 동기화 쪽은 독립적이라 둘 중 하나만 써도 됩니다.
+
+## 폴더 구조
+
+`$SSHPIER_HOME` (기본값 `~/.sshpier`):
+
+```
+config/
+  servers.ini            직접 편집하는 파일
+  keys/                  개인키. 화면에서 고르면 여기로 복사됩니다
+  ssh-mcp-config.json    생성물
+  sites.json             생성물
+sites/<이름>/            작업 사본, 깃 저장소
+repos/                   로컬 bare 미러 (선택)
+logs/
+```
+
+## 기여
+
+버그 신고와 패치 환영합니다 — [CONTRIBUTING.md](../CONTRIBUTING.md) 를 보세요.
+테스트는 서버 없이 돌아갑니다. 배포 동작은 서버 역할을 하는 로컬 폴더를 상대로
+실제로 실행해 검증합니다.
+
+```bash
+pip install -e '.[dev]'
+pytest
+```
+
+## 라이선스
+
+Apache License 2.0 — [LICENSE](../LICENSE), [NOTICE](../NOTICE) 참고.

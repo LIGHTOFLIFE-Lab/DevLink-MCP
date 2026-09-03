@@ -1,0 +1,47 @@
+# --- 자격증명: 절대 커밋 금지 ---------------------------------
+# sshpier 는 servers.ini 에 비밀번호를 평문으로 둡니다.
+# 그 파일이 실수로도 저장소에 들어가지 않게 합니다.
+servers.ini
+*.pem
+*.ppk
+*.key
+*.pfx
+*.p12
+id_rsa*
+id_ed25519*
+.env
+keys/
+
+# 예외: 비밀번호가 없는 예시 파일
+!examples/servers.example.ini
+
+# --- 작업 산출물 -----------------------------------------------
+ssh-mcp-config.json
+sites.json
+sites/
+repos/
+logs/
+*.log
+
+# --- 파이썬 ----------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# --- 편집기·OS -------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp

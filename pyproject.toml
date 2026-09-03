@@ -1,0 +1,66 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sshpier"
+version = "0.1.0"
+description = "A local control panel for SSH servers: configure them for MCP, pull sites, edit locally, deploy with git-backed rollback."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+keywords = ["ssh", "mcp", "sftp", "deploy", "rollback", "winscp", "web-maintenance"]
+authors = [{ name = "sshpier contributors" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Environment :: Web Environment",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Internet :: File Transfer Protocol (FTP)",
+  "Topic :: System :: Systems Administration",
+  "Topic :: Software Development :: Version Control :: Git",
+]
+
+# 핵심 기능(설정 + 화면)은 표준 라이브러리만으로 돕니다.
+# 파이썬만 있으면 설치 없이 굴러가는 것이 이 도구의 장점이라 그렇게 뒀습니다.
+dependencies = []
+
+[project.optional-dependencies]
+# 원격 수집/배포에는 SSH 클라이언트가 필요합니다.
+sync = ["paramiko>=2.11"]
+dev = ["pytest>=7", "paramiko>=2.11"]
+
+[project.urls]
+Homepage = "https://github.com/OWNER/sshpier"
+Issues = "https://github.com/OWNER/sshpier/issues"
+Changelog = "https://github.com/OWNER/sshpier/blob/main/CHANGELOG.md"
+
+[project.scripts]
+sshpier = "sshpier.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sshpier"]
+
+# Ship the example config inside the package rather than keeping a second copy
+# under src/, so the file in examples/ cannot drift away from the one that
+# `sshpier init` writes.
+[tool.hatch.build.targets.wheel.force-include]
+"examples/servers.example.ini" = "sshpier/data/servers.example.ini"
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "examples", "docs", "README.md", "LICENSE", "NOTICE",
+           "CHANGELOG.md", "CONTRIBUTING.md", "SECURITY.md", "pyproject.toml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

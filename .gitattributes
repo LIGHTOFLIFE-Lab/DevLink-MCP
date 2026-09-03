@@ -1,0 +1,13 @@
+# Batch files must keep CRLF: cmd.exe mishandles multi-line parenthesised
+# blocks in LF-only files.
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+
+# PowerShell scripts need a UTF-8 BOM. Windows PowerShell 5.1 reads a
+# BOM-less .ps1 as ANSI, which corrupts non-ASCII text and breaks parsing.
+# Leave these files byte-for-byte alone.
+*.ps1  -text
+
+*.py   text eol=lf
+*.sh   text eol=lf
+*.md   text eol=lf
