@@ -181,7 +181,13 @@ def _safe_extract(archive: Path, target: Path) -> int:
             members.append(member)
             if member.isfile():
                 count += 1
-        tar.extractall(target, members=members)
+        # Python 3.14 makes filtering the default and warns before then.
+        # We already vet every member above, but "data" is the safer contract
+        # and pins the behaviour across versions.
+        try:
+            tar.extractall(target, members=members, filter="data")
+        except TypeError:                     # Python < 3.12 has no filter=
+            tar.extractall(target, members=members)
     return count
 
 

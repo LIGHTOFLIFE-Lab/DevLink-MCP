@@ -11,7 +11,7 @@ import pytest
 
 from devlink_mcp import sync
 from devlink_mcp.sync import Git, Site
-from devlink_mcp.transport import LocalTransport
+from devlink_mcp.transport import LocalTransport, find_posix_shell
 
 
 @pytest.fixture(autouse=True)
@@ -30,7 +30,18 @@ def _has_git() -> bool:
         return False
 
 
-pytestmark = pytest.mark.skipif(not _has_git(), reason="git not available")
+# LocalTransport sends the same POSIX shell a real server would receive. On a
+# machine with no such shell there is nothing meaningful to run, so skip rather
+# than fail: the product is fine, the test double cannot be hosted.
+needs_posix_shell = pytest.mark.skipif(
+    find_posix_shell() is None,
+    reason="no POSIX shell found (install git, which ships one on Windows)",
+)
+
+pytestmark = [
+    pytest.mark.skipif(not _has_git(), reason="git not available"),
+    needs_posix_shell,
+]
 
 
 @pytest.fixture
@@ -305,3 +316,20 @@ def test_rollback_from_git_keeps_binary_files_intact(tmp_path, server):
 
     sync.rollback(tr, site, work, tag="deploy/b1")
     assert (server / "srv" / "www" / "logo.png").read_bytes() == blob
+
+
+def test_local_transport_says_what_is_missing(tmp_path):
+    """A machine with no POSIX shell should say so, not fail obscurely."""
+    from devlink_mcp.transport import NoPosixShell
+
+    tr = LocalTransport(tmp_path)
+    tr.shell = None
+    with pytest.raises(NoPosixShell) as exc:
+        tr.run("echo hello")
+    assert "git" in str(exc.value).lower()
+
+
+def test_local_transport_uses_forward_slashes(tmp_path):
+    """Git Bash on Windows needs C:/like/this, not backslashes."""
+    tr = LocalTransport(tmp_path)
+    assert "\\" not in tr._root_for_shell

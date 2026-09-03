@@ -71,31 +71,76 @@ class Transport:
         self.close()
 
 
+class NoPosixShell(RuntimeError):
+    """No shell available that can run the commands we send to servers."""
+
+
+def find_posix_shell() -> str | None:
+    """Locate a shell that understands the commands we send to a server.
+
+    Everything this project sends over SSH is POSIX shell — ``mkdir -p``,
+    ``test -f``, ``for f in ...``, ``sha1sum``. On Windows, ``shell=True`` runs
+    ``cmd.exe``, which understands none of it, so the shell has to be named
+    explicitly. Git for Windows ships one, and anyone using this project has
+    git installed already.
+    """
+    for name in ("bash", "sh"):
+        found = shutil.which(name)
+        if found:
+            return found
+
+    for candidate in (
+        r"C:\Program Files\Git\bin\bash.exe",
+        r"C:\Program Files\Git\usr\bin\bash.exe",
+        r"C:\Program Files (x86)\Git\bin\bash.exe",
+    ):
+        if os.path.isfile(candidate):
+            return candidate
+    return None
+
+
 class LocalTransport(Transport):
     """Treat a local directory as if it were the remote machine.
 
-    Remote absolute paths are mapped under ``root``. Used by the test suite and
-    by ``--dry-run``, so the same code path is exercised either way.
+    Remote absolute paths are mapped under ``root``. Used by the test suite so
+    that deploy and rollback — the operations that overwrite other people's
+    websites — are exercised for real without needing a server.
+
+    The commands are the same POSIX shell a real server would receive, which is
+    the point: emulating them in Python would test a different program.
     """
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, shell: str | None = None):
         self.root = Path(root).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         # Commands stage archives under /tmp; give that a home inside the fake
         # root so the mapping below has somewhere to write.
         (self.root / "tmp").mkdir(exist_ok=True)
+        self.shell = shell or find_posix_shell()
 
     def _map(self, remote: str) -> Path:
         return self.root / PurePosixPath(remote).relative_to("/")
 
+    @property
+    def _root_for_shell(self) -> str:
+        # A POSIX shell — Git Bash included — wants forward slashes. Windows
+        # accepts C:/like/this everywhere it accepts backslashes.
+        return str(self.root).replace("\\", "/")
+
     def run(self, command: str) -> Result:
+        if not self.shell:
+            raise NoPosixShell(
+                "LocalTransport needs a POSIX shell. Install git (which ships "
+                "one on Windows), or pass shell=... explicitly."
+            )
         # Remote commands are written as POSIX shell; run them with the root as
         # the filesystem origin by rewriting absolute paths.
-        rewritten = command.replace(" /", f" {self.root}/")
+        root = self._root_for_shell
+        rewritten = command.replace(" /", f" {root}/")
         if rewritten.startswith("/"):
-            rewritten = f"{self.root}{rewritten}"
+            rewritten = f"{root}{rewritten}"
         proc = subprocess.run(
-            rewritten, shell=True, cwd=self.root,
+            [self.shell, "-c", rewritten], cwd=self.root,
             capture_output=True, text=True,
         )
         return Result(proc.returncode, proc.stdout, proc.stderr)

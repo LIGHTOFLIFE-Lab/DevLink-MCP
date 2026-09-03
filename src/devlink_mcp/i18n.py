@@ -384,10 +384,25 @@ def detect(preferred: str = "") -> str:
         code = (candidate or "").strip().lower()[:2]
         if code in MESSAGES:
             return code
-    try:
-        sys_locale = locale.getdefaultlocale()[0] or ""
-    except (ValueError, TypeError):  # pragma: no cover - platform dependent
-        sys_locale = ""
+    # getdefaultlocale() is deprecated and goes away in 3.15. It read the
+    # environment first, so do the same: those variables are how a person
+    # states a preference, while getlocale() reports whatever setlocale() was
+    # last given — often "C", which means nothing was chosen.
+    sys_locale = ""
+    for name in ("LC_ALL", "LC_MESSAGES", "LANG", "LANGUAGE"):
+        value = (os.environ.get(name) or "").strip()
+        if value and value.split(".")[0].upper() not in ("C", "POSIX"):
+            sys_locale = value
+            break
+
+    if not sys_locale:
+        try:
+            sys_locale = locale.getlocale()[0] or ""
+        except (ValueError, TypeError):  # pragma: no cover - platform dependent
+            sys_locale = ""
+        if sys_locale.split(".")[0].upper() in ("C", "POSIX"):
+            sys_locale = ""
+
     if sys_locale.lower().startswith("ko"):
         return "ko"
     return "en"

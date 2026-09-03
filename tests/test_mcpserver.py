@@ -12,7 +12,17 @@ import pytest
 from devlink_mcp import mcpserver
 from devlink_mcp.config import Paths
 from devlink_mcp.mcpserver import Server
-from devlink_mcp.transport import LocalTransport
+from devlink_mcp.transport import LocalTransport, find_posix_shell
+
+# LocalTransport sends the same POSIX shell a real server would receive. On a
+# machine with no such shell there is nothing meaningful to run, so skip rather
+# than fail: the product is fine, the test double cannot be hosted.
+needs_posix_shell = pytest.mark.skipif(
+    find_posix_shell() is None,
+    reason="no POSIX shell found (install git, which ships one on Windows)",
+)
+
+pytestmark = needs_posix_shell
 
 INI = """
 [DEFAULT]
