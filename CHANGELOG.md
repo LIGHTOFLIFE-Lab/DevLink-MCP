@@ -57,5 +57,5 @@ First public release.
 - MCP client configuration is written without a byte order mark, and the
   previous file is backed up first.
 
-[Unreleased]: https://github.com/kimajun0919/DevLink-MCP/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/kimajun0919/DevLink-MCP/releases/tag/v0.1.0
+[Unreleased]: https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/releases/tag/v0.1.0

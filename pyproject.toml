@@ -41,9 +41,9 @@ sync = ["paramiko>=2.11"]
 dev = ["pytest>=7", "paramiko>=2.11"]
 
 [project.urls]
-Homepage = "https://github.com/kimajun0919/DevLink-MCP"
-Issues = "https://github.com/kimajun0919/DevLink-MCP/issues"
-Changelog = "https://github.com/kimajun0919/DevLink-MCP/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP"
+Issues = "https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/issues"
+Changelog = "https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/blob/main/CHANGELOG.md"
 
 [project.scripts]
 # Short name for daily use; the full name so `pip install devlink-mcp` gives you

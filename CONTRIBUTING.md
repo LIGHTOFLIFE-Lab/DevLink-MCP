@@ -5,7 +5,7 @@ Thanks for looking. Issues and pull requests are both welcome.
 ## Getting set up
 
 ```bash
-git clone https://github.com/kimajun0919/DevLink-MCP
+git clone https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP
 cd DevLink-MCP
 pip install -e '.[dev]'
 pytest
