@@ -25,9 +25,14 @@ DMG="dist/${NAME}.dmg"
 
 echo "==> environment"
 python3 -m venv "$VENV"
-"$VENV/bin/pip" install --quiet --upgrade pip
-"$VENV/bin/pip" install --quiet pyinstaller pillow "paramiko>=2.11"
-"$VENV/bin/pip" install --quiet -e .
+# Always `python -m pip`, never the pip script: on Windows pip cannot replace
+# its own running executable, and using the module form everywhere keeps the
+# three build scripts saying the same thing. The upgrade is a convenience, so
+# it is allowed to fail without stopping the build.
+"$VENV/bin/python" -m pip install --quiet --upgrade pip || \
+  echo "    (could not upgrade pip; continuing)"
+"$VENV/bin/python" -m pip install --quiet pyinstaller pillow "paramiko>=2.11"
+"$VENV/bin/python" -m pip install --quiet -e .
 
 echo "==> icon"
 "$VENV/bin/python" packaging/make_icon.py build/icon.png

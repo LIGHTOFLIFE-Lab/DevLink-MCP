@@ -30,9 +30,22 @@ Set-Location $root
 
 function Invoke-Step {
     param([string]$What, [scriptblock]$Body)
-    & $Body
-    if ($LASTEXITCODE -ne 0) {
-        throw "$What failed (exit $LASTEXITCODE)"
+    # Native programs are judged by their exit code, not by whether they wrote
+    # to stderr. pip and pyinstaller both report ordinary progress there, and
+    # with ErrorActionPreference = Stop in Windows PowerShell that can raise
+    # NativeCommandError before we ever get to look at the exit code. So the
+    # preference is relaxed for the duration of the call and restored after.
+    $previous = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $global:LASTEXITCODE = 0
+        & $Body
+        $code = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $previous
+    }
+    if ($code -ne 0) {
+        throw "$What failed (exit $code)"
     }
 }
 
@@ -66,14 +79,29 @@ $out = "dist\DevLink-MCP-$version-windows-x64.exe"
 Write-Host "==> environment"
 Invoke-Step "creating the build virtualenv" { & $pyExe @pyArgs -m venv $venv }
 
-$venvPip = "$venv\Scripts\pip.exe"
 $venvPy = "$venv\Scripts\python.exe"
 $venvPyi = "$venv\Scripts\pyinstaller.exe"
-if (-not (Test-Path $venvPip)) { throw "the virtualenv has no pip: $venvPip" }
+if (-not (Test-Path $venvPy)) { throw "the virtualenv has no python: $venvPy" }
 
-Invoke-Step "upgrading pip"        { & $venvPip install --quiet --upgrade pip }
-Invoke-Step "installing build deps" { & $venvPip install --quiet pyinstaller pillow "paramiko>=2.11" }
-Invoke-Step "installing DevLink-MCP" { & $venvPip install --quiet -e . }
+# Always `python -m pip`, never `pip.exe`. On Windows pip cannot replace its own
+# running executable, so `pip.exe install --upgrade pip` fails outright and pip
+# itself tells you to use the module form.
+#
+# The upgrade is a convenience, not a requirement: an old pip still installs
+# these packages. A failure here must not stop a build, so it is the one step
+# that is allowed to fail.
+Write-Host "==> pip"
+$previous = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& $venvPy -m pip install --quiet --upgrade pip
+$pipUpgrade = $LASTEXITCODE
+$ErrorActionPreference = $previous
+if ($pipUpgrade -ne 0) {
+    Write-Host "    (could not upgrade pip; continuing with the version in the venv)"
+}
+
+Invoke-Step "installing build deps" { & $venvPy -m pip install --quiet pyinstaller pillow "paramiko>=2.11" }
+Invoke-Step "installing DevLink-MCP" { & $venvPy -m pip install --quiet -e . }
 
 Write-Host "==> icon"
 Invoke-Step "drawing the icon" { & $venvPy packaging\make_icon.py build\icon.png }
