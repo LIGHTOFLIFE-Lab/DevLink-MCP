@@ -55,6 +55,10 @@ dist/
 staging/
 *.spec.bak
 *.dmg
+*.exe
+*.icns
+*.ico
+icon.png
 *.zip
 *.tar.gz
 *.sha256

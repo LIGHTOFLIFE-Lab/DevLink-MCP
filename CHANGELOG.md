@@ -12,6 +12,15 @@ Notable changes to this project. The format follows
   paramiko. Node.js is no longer required anywhere.
 - Uploads through MCP copy the file they replace into the site's backup
   directory before writing.
+- Downloadable builds. A `.dmg`, an `.exe` and a `.tar.gz` that contain their
+  own Python, so someone can open one file and get the settings panel without
+  installing anything. Built per platform by `packaging/build_*.{sh,ps1}` and
+  released by a tag; the icon is drawn by `packaging/make_icon.py`.
+- `devlink_mcp.desktop`, the entry point those builds run: it creates the
+  directory layout, opens the panel, and reports a failure in a dialog rather
+  than a console nobody is watching. With arguments it behaves like the
+  ordinary command line, which is what lets a downloaded build register
+  `serve` with an MCP client.
 
 ### Changed
 

@@ -5,7 +5,7 @@ name: Release
 #
 #   git tag v0.1.0 && git push origin v0.1.0
 #
-# or run this from the Actions tab to produce a draft without tagging.
+# or run this from the Actions tab to produce the artifacts without tagging.
 
 on:
   push:
@@ -25,16 +25,16 @@ jobs:
         include:
           - os: windows-latest
             label: Windows (x64)
-            asset: DevLink-MCP-windows-x64.zip
-          - os: macos-latest
+            script: powershell -ExecutionPolicy Bypass -File packaging/build_windows.ps1
+          - os: macos-14
             label: macOS (Apple Silicon)
-            asset: DevLink-MCP-macos-arm64.dmg
+            script: bash packaging/build_macos.sh
           - os: macos-13
             label: macOS (Intel)
-            asset: DevLink-MCP-macos-x64.dmg
+            script: bash packaging/build_macos.sh
           - os: ubuntu-latest
             label: Linux (x64)
-            asset: DevLink-MCP-linux-x64.tar.gz
+            script: bash packaging/build_linux.sh
 
     steps:
       - uses: actions/checkout@v4
@@ -43,75 +43,54 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[sync]" pyinstaller
-
+      # The build scripts make their own venv; point them at one inside the
+      # workspace so the runner's Python stays untouched.
       - name: Build
-        run: pyinstaller packaging/devlink.spec --noconfirm
+        shell: bash
+        run: ${{ matrix.script }}
 
-      # A binary that cannot start is worse than no binary. Prove it runs
-      # before it goes anywhere near a release page.
-      - name: Smoke test (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          dist\DevLink-MCP.exe --version
-          dist\DevLink-MCP.exe init --home "$env:RUNNER_TEMP\dl"
-          dist\DevLink-MCP.exe check --home "$env:RUNNER_TEMP\dl"; if ($LASTEXITCODE -gt 1) { exit 1 }
-
-      - name: Smoke test (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          ./dist/DevLink-MCP.app/Contents/MacOS/DevLink-MCP --version
-          ./dist/DevLink-MCP.app/Contents/MacOS/DevLink-MCP init --home "$RUNNER_TEMP/dl"
-
-      - name: Smoke test (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          ./dist/DevLink-MCP --version
-          ./dist/DevLink-MCP init --home "$RUNNER_TEMP/dl"
-
-      # ---- package ------------------------------------------------------
-      - name: Package (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          Copy-Item README.md, LICENSE, NOTICE dist\
-          Compress-Archive -Path dist\* -DestinationPath ${{ matrix.asset }}
-
-      - name: Package (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          mkdir -p staging
-          cp -R dist/DevLink-MCP.app staging/
-          cp README.md LICENSE NOTICE staging/
-          ln -s /Applications staging/Applications
-          hdiutil create -volname "DevLink-MCP" -srcfolder staging \
-                         -ov -format UDZO "${{ matrix.asset }}"
-
-      - name: Package (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          mkdir -p staging/DevLink-MCP
-          cp dist/DevLink-MCP README.md LICENSE NOTICE staging/DevLink-MCP/
-          tar czf "${{ matrix.asset }}" -C staging DevLink-MCP
-
-      - name: Checksum
+      # A binary that cannot start is worse than no binary. Prove it runs, and
+      # that it still behaves like the command line, before it goes anywhere
+      # near a release page — the MCP client registration depends on
+      # `<binary> serve --home ...` working.
+      - name: Locate the binary
         shell: bash
         run: |
-          if command -v sha256sum >/dev/null; then
-            sha256sum "${{ matrix.asset }}" > "${{ matrix.asset }}.sha256"
-          else
-            shasum -a 256 "${{ matrix.asset }}" > "${{ matrix.asset }}.sha256"
-          fi
-          cat "${{ matrix.asset }}.sha256"
+          case "${{ runner.os }}" in
+            Windows) echo "BIN=$(ls dist/DevLink-MCP-*-windows-x64.exe)" >> "$GITHUB_ENV" ;;
+            macOS)   echo "BIN=dist/DevLink-MCP.app/Contents/MacOS/DevLink-MCP" >> "$GITHUB_ENV" ;;
+            Linux)   echo "BIN=dist/DevLink-MCP" >> "$GITHUB_ENV" ;;
+          esac
+
+      - name: Smoke test — command line
+        shell: bash
+        run: |
+          "$BIN" --version
+          "$BIN" init --home "$RUNNER_TEMP/dl"
+          test -f "$RUNNER_TEMP/dl/config/servers.ini"
+          "$BIN" check --home "$RUNNER_TEMP/dl" || test $? -le 1
+
+      - name: Smoke test — the panel answers
+        shell: bash
+        run: |
+          # No browser on a runner, and no fixed port in normal use, so pin one.
+          "$BIN" gui --home "$RUNNER_TEMP/dl" --port 8791 --no-browser &
+          for _ in $(seq 1 30); do
+            sleep 1
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8791/ || true)
+            [ "$code" = "200" ] && echo "panel answered" && exit 0
+          done
+          echo "the settings panel never answered" >&2
+          exit 1
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.asset }}
+          name: ${{ matrix.os }}
           path: |
-            ${{ matrix.asset }}
-            ${{ matrix.asset }}.sha256
+            dist/*.dmg
+            dist/*.exe
+            dist/*.tar.gz
+            dist/*.sha256
           if-no-files-found: error
 
   release:
@@ -132,21 +111,25 @@ jobs:
           files: artifacts/*
           generate_release_notes: true
           body: |
-            Download the file for your system, unpack it, and run it. No Python
-            installation required.
+            Download the file for your system and open it. The settings panel
+            appears in your browser. Python is inside the download; there is
+            nothing else to install.
 
             | System | File |
             |---|---|
-            | Windows | `DevLink-MCP-windows-x64.zip` |
-            | macOS (Apple Silicon) | `DevLink-MCP-macos-arm64.dmg` |
-            | macOS (Intel) | `DevLink-MCP-macos-x64.dmg` |
-            | Linux | `DevLink-MCP-linux-x64.tar.gz` |
+            | Windows 10/11 | `DevLink-MCP-…-windows-x64.exe` |
+            | macOS, Apple Silicon | `DevLink-MCP-…-macos-arm64.dmg` |
+            | macOS, Intel | `DevLink-MCP-…-macos-x86_64.dmg` |
+            | Linux | `DevLink-MCP-…-linux-x86_64.tar.gz` |
 
-            **These builds are not code-signed.** Windows SmartScreen will warn
-            you: choose *More info* then *Run anyway*. macOS Gatekeeper will
-            refuse the first launch: right-click the app and choose *Open*, or
-            run `xattr -dr com.apple.quarantine /Applications/DevLink-MCP.app`.
+            **These builds are not code-signed**, so the first launch asks you
+            to confirm:
+
+            - Windows SmartScreen: *More info* → *Run anyway*
+            - macOS Gatekeeper: right-click the app → *Open* → *Open*, or
+              `xattr -dr com.apple.quarantine /Applications/DevLink-MCP.app`
 
             Verify a download against the matching `.sha256` file if you like.
 
-            Prefer to install from source? `pip install devlink-mcp`.
+            Prefer to install from source? `pip install devlink-mcp` gives you
+            the same program.

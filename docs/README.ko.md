@@ -6,6 +6,29 @@
 만들어 AI 어시스턴트가 그 장비들을 다룰 수 있게 하고, 사이트를 내려받아
 쓰던 편집기로 고치게 해주고, 깃을 되돌리기 삼아 변경분을 올려줍니다.
 
+**[내려받아 실행하기](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/releases/latest)** —
+파이썬 없이 바로 씁니다. 자기 OS 용 파일을 받아서 열면 브라우저에 설정 화면이
+뜹니다.
+
+| 운영체제 | 파일 |
+|---|---|
+| 윈도우 10/11 | `DevLink-MCP-…-windows-x64.exe` |
+| macOS (애플 실리콘) | `DevLink-MCP-…-macos-arm64.dmg` |
+| macOS (인텔) | `DevLink-MCP-…-macos-x86_64.dmg` |
+| Linux | `DevLink-MCP-…-linux-x86_64.tar.gz` |
+
+**코드 서명이 되어 있지 않습니다.** 인증서 비용이 드는데 이 프로젝트에는 그
+예산이 없습니다. 그래서 처음 한 번 경고가 뜹니다.
+
+- *Windows* — SmartScreen 파란 경고창. **추가 정보** → **실행**.
+- *macOS* — Gatekeeper 가 첫 실행을 막습니다. 앱을 **오른쪽 클릭 → 열기**,
+  또는 `xattr -dr com.apple.quarantine /Applications/DevLink-MCP.app`.
+
+릴리스마다 `.sha256` 이 함께 올라가니 받은 파일을 검증하실 수 있습니다.
+빌드는 태그된 소스로부터 GitHub 러너에서
+[읽어볼 수 있는 워크플로](../.github/workflows/release.yml)가 만듭니다.
+명령줄이 편하면 `pip install devlink-mcp` 로 같은 프로그램을 쓸 수 있습니다.
+
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/LIGHTOFLIFE-Lab/DevLink-MCP)
 [![CI](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../LICENSE)
@@ -36,30 +59,6 @@ DevLink-MCP 는 일하는 방식을 바꾸지 않으면서 그 위험만 걷어�
   서버를 대조합니다. 동료나 고객이 서버에서 직접 고쳤다면 그 작업을 지우는 대신
   멈춥니다.
 
-## 내려받아 실행하기
-
-파이썬 없이 바로 씁니다. [최신 릴리스](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/releases/latest)
-에서 자기 OS 용 파일을 받아 압축을 풀고 실행하면 브라우저에 설정 화면이 열립니다.
-
-| 운영체제 | 파일 |
-|---|---|
-| Windows | `DevLink-MCP-windows-x64.zip` |
-| macOS (애플 실리콘) | `DevLink-MCP-macos-arm64.dmg` |
-| macOS (인텔) | `DevLink-MCP-macos-x64.dmg` |
-| Linux | `DevLink-MCP-linux-x64.tar.gz` |
-
-**코드 서명이 되어 있지 않습니다.** 인증서 비용이 드는데 이 프로젝트에는 그
-예산이 없습니다. 그래서 실행할 때 경고가 뜹니다.
-
-- *Windows* — SmartScreen 파란 경고창. **추가 정보** → **실행**.
-- *macOS* — Gatekeeper 가 첫 실행을 막습니다. 앱을 **오른쪽 클릭 → 열기**,
-  또는 `xattr -dr com.apple.quarantine /Applications/DevLink-MCP.app`.
-
-릴리스마다 `.sha256` 파일이 함께 올라가니 받은 파일을 검증하실 수 있습니다.
-빌드는 태그된 소스로부터 GitHub 러너에서
-[릴리스 워크플로](../.github/workflows/release.yml)가 만듭니다 — 어떻게 만들어졌는지
-그대로 읽어보실 수 있습니다.
-
 ## 설치 없이 바로 해보기
 
 위의 **Open in GitHub Codespaces** 를 누르면 컨테이너가 만들어지고 패키지가
@@ -74,7 +73,7 @@ bash .devcontainer/demo.sh
 폴더를 상대로 하므로 SSH 도 자격증명도 필요 없고 뒷정리할 것도 없습니다.
 
 ```bash
-pytest -q                                   # 전체 테스트 86개
+pytest -q                                   # 전체 테스트 89개
 devlink gui --port 8765 --no-browser        # 설정 화면. 포트 8765 로 전달됩니다
 ```
 

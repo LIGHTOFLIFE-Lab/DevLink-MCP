@@ -7,6 +7,31 @@ locked-down configuration to an MCP server so an AI assistant can work on those
 machines, pulls a site down so you can edit it in your own editor, and puts
 your changes back with git as the undo button.
 
+**[Download and run](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/releases/latest)** —
+no Python needed. Take the file for your system, open it, and the settings
+panel appears in your browser.
+
+| System | File |
+|---|---|
+| Windows 10/11 | `DevLink-MCP-…-windows-x64.exe` |
+| macOS, Apple Silicon | `DevLink-MCP-…-macos-arm64.dmg` |
+| macOS, Intel | `DevLink-MCP-…-macos-x86_64.dmg` |
+| Linux | `DevLink-MCP-…-linux-x86_64.tar.gz` |
+
+**These builds are not code-signed**, because a certificate costs money this
+project does not have. Your system will say so, once:
+
+- *Windows* — SmartScreen shows a blue warning. Choose **More info**, then
+  **Run anyway**.
+- *macOS* — Gatekeeper refuses the first launch. Right-click the app and choose
+  **Open**, or run
+  `xattr -dr com.apple.quarantine /Applications/DevLink-MCP.app`.
+
+Each release includes a `.sha256` if you want to verify what you downloaded.
+The builds are produced from the tagged source on GitHub's own runners by
+[a workflow you can read](.github/workflows/release.yml). Prefer the command
+line? `pip install devlink-mcp` gives you the same program.
+
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/LIGHTOFLIFE-Lab/DevLink-MCP)
 [![CI](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/actions/workflows/ci.yml/badge.svg)](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
@@ -43,33 +68,6 @@ changing how you work:
   the client — changed a file directly, it stops instead of destroying their
   work.
 
-## Download and run
-
-No Python needed — grab the build for your system from the
-[latest release](https://github.com/LIGHTOFLIFE-Lab/DevLink-MCP/releases/latest), unpack it, and run
-it. It opens the settings panel in your browser.
-
-| System | File |
-|---|---|
-| Windows | `DevLink-MCP-windows-x64.zip` |
-| macOS (Apple Silicon) | `DevLink-MCP-macos-arm64.dmg` |
-| macOS (Intel) | `DevLink-MCP-macos-x64.dmg` |
-| Linux | `DevLink-MCP-linux-x64.tar.gz` |
-
-**These builds are not code-signed**, because a certificate costs money this
-project does not have. Your system will say so:
-
-- *Windows* — SmartScreen shows a blue warning. Choose **More info**, then
-  **Run anyway**.
-- *macOS* — Gatekeeper refuses the first launch. Right-click the app and choose
-  **Open**, or run
-  `xattr -dr com.apple.quarantine /Applications/DevLink-MCP.app`.
-
-Each release includes a `.sha256` file if you want to verify what you
-downloaded. The builds are produced by
-[a GitHub Actions workflow](.github/workflows/release.yml) from the tagged
-source, on GitHub's own runners — you can read exactly how each one was made.
-
 ## Try it without installing anything
 
 Press **Open in GitHub Codespaces** above. It builds a container, installs the
@@ -84,7 +82,7 @@ refused because someone changed the server, then roll back — against a local
 directory standing in for a server. No SSH, no credentials, nothing to undo.
 
 ```bash
-pytest -q                                   # the full suite, 86 tests
+pytest -q                                   # the full suite, 89 tests
 devlink gui --port 8765 --no-browser        # the settings panel, on the
                                             # forwarded port 8765
 ```
