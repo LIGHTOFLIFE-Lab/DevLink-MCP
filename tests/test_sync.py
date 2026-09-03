@@ -228,3 +228,80 @@ def test_extract_rejects_path_traversal(tmp_path):
     target.mkdir()
     with pytest.raises(RuntimeError):
         sync._safe_extract(archive, target)
+
+
+# --------------------------------------------------------------------------
+# automatic protection of work in progress
+# --------------------------------------------------------------------------
+
+def test_pull_never_destroys_uncommitted_work(tr, site, work):
+    """A pull replaces the working copy; it must not silently eat local edits."""
+    sync.pull(tr, site, work)
+    (work / "index.html").write_text("two hours of local work\n")   # not committed
+
+    result = sync.pull(tr, site, work)
+
+    assert result["saved_local"], "local changes were not committed before the pull"
+    git = Git(work)
+    saved = git("show", f"{result['saved_local']}:index.html")
+    assert "two hours of local work" in saved
+
+
+def test_pull_discard_local_when_asked(tr, site, work):
+    sync.pull(tr, site, work)
+    (work / "index.html").write_text("scratch\n")
+    result = sync.pull(tr, site, work, discard_local=True)
+    assert result["saved_local"] is None
+    assert (work / "index.html").read_text() == "<h1>original</h1>\n"
+
+
+def test_rollback_works_without_a_remote_backup(tmp_path, server):
+    """A site with no backup path must still be recoverable, from git."""
+    site = Site(name="nb", host="localhost", remote="/srv/www",
+                backup="", exclude=("uploads/",))
+    tr = LocalTransport(server)
+    work = tmp_path / "work-nb"
+
+    sync.pull(tr, site, work)
+    Git(work).tag("deploy/base")
+    (work / "index.html").write_text("<h1>broken</h1>\n")
+    Git(work).commit_all("break")
+
+    result = sync.deploy(tr, site, work, tag="deploy/x1", since="deploy/base")
+    assert result["backup"] == ""       # nothing kept on the server
+    assert (server / "srv" / "www" / "index.html").read_text() == "<h1>broken</h1>\n"
+
+    restored = sync.rollback(tr, site, work, tag="deploy/x1")
+
+    assert restored["source"] == "git-history"
+    assert (server / "srv" / "www" / "index.html").read_text() == "<h1>original</h1>\n"
+
+
+def test_rollback_prefers_the_remote_backup_when_present(tr, site, work, server):
+    sync.pull(tr, site, work)
+    Git(work).tag("deploy/base")
+    (work / "index.html").write_text("<h1>v2</h1>\n")
+    Git(work).commit_all("v2")
+    sync.deploy(tr, site, work, tag="deploy/x2", since="deploy/base")
+
+    result = sync.rollback(tr, site, work, tag="deploy/x2")
+    assert result["source"] == "remote-backup"
+
+
+def test_rollback_from_git_keeps_binary_files_intact(tmp_path, server):
+    """git archive is used rather than text round-tripping, so images survive."""
+    blob = bytes(range(256)) * 8
+    (server / "srv" / "www" / "logo.png").write_bytes(blob)
+
+    site = Site(name="bin", host="localhost", remote="/srv/www", backup="")
+    tr = LocalTransport(server)
+    work = tmp_path / "work-bin"
+
+    sync.pull(tr, site, work)
+    Git(work).tag("deploy/base")
+    (work / "logo.png").write_bytes(b"corrupted")
+    Git(work).commit_all("replace image")
+    sync.deploy(tr, site, work, tag="deploy/b1", since="deploy/base")
+
+    sync.rollback(tr, site, work, tag="deploy/b1")
+    assert (server / "srv" / "www" / "logo.png").read_bytes() == blob

@@ -12,9 +12,15 @@ The shape of it:
     work out what changed with ``git diff``, back up exactly those files on the
     server, upload only them, and tag the commit.
 ``rollback``
-    put the backup archive back.
+    put the backup archive back, or rebuild from the commit history if the
+    site was configured without one.
 
-Two decisions worth stating, because they are what make this safe:
+Backups are not something you remember to do. Every operation that could lose
+work takes a copy first: ``pull`` commits anything uncommitted before it
+replaces the working tree, and ``deploy`` archives the files it is about to
+overwrite on the server before it writes.
+
+Three decisions worth stating, because they are what make this safe:
 
 *Only changed files are deployed.* Overwriting a whole web root destroys files
 the application itself created — caches, uploads — and resets ownership and
@@ -25,6 +31,10 @@ the files we are about to overwrite against what we recorded at the last
 deployment. If someone edited the server directly, their work would be silently
 destroyed, so we stop and say so. This catches a colleague who never used this
 tool at all, which no amount of git discipline would.
+
+*Nothing uncommitted is ever thrown away.* A pull replaces the working copy, so
+it commits what is there first. The person may not have wanted that commit, but
+undoing an unwanted commit is trivial and recovering deleted work is not.
 """
 
 from __future__ import annotations
@@ -234,11 +244,26 @@ def detect_drift(tr: Transport, site: Site, work: Path, rel_paths: list[str]) ->
 # operations
 # --------------------------------------------------------------------------
 
-def pull(tr: Transport, site: Site, work: Path, message: str = "") -> dict:
-    """Fetch the current server state and commit it."""
+def pull(tr: Transport, site: Site, work: Path, message: str = "",
+         discard_local: bool = False) -> dict:
+    """Fetch the current server state and commit it.
+
+    Pull replaces the working copy, so anything uncommitted would be destroyed.
+    Rather than refusing and making the person work out what to do, we commit
+    what is there first. Git then holds it and it can be recovered; nothing the
+    person typed is ever thrown away by a pull.
+    """
     work = Path(work)
     git = Git(work)
     git.init()
+
+    stashed = None
+    if git.is_dirty():
+        if discard_local:
+            git("checkout", "--", ".", check=False)
+            git("clean", "-fd", check=False)
+        else:
+            stashed = git.commit_all(message or f"wip: local changes before pull ({site.name})")
 
     archive_remote = tr.tmp_path(f"sshpier-{site.name}-pull.tgz")
     excludes = _tar_excludes(site.exclude)
@@ -264,12 +289,13 @@ def pull(tr: Transport, site: Site, work: Path, message: str = "") -> dict:
         for item in staging.iterdir():
             shutil.move(str(item), str(work / item.name))
 
-    changed = git.commit_all(message or f"pull: {site.name}")
+    changed = git.commit_all(f"pull: {site.name}")
     return {
         "files": count,
         "commit": changed,
         "changed": bool(changed),
         "path": str(work),
+        "saved_local": stashed,
     }
 
 
@@ -330,6 +356,10 @@ def deploy(tr: Transport, site: Site, work: Path, tag: str,
         manifest["files"][rel] = _sha1(work / rel)
     manifest["tag"] = tag
     manifest["backup"] = backup_path
+    # Record what the server held before this deployment, resolved to a commit.
+    # A deploy tag points at the commit that *introduced* the change, so its
+    # parent is not what we want; this is.
+    manifest["previous"] = (git("rev-parse", base, check=False) if base else "")
     write_manifest(work, manifest)
     git.commit_all(f"deploy: {tag}")
     git.tag(tag, f"deployed {len(files)} file(s)")
@@ -344,7 +374,17 @@ def deploy(tr: Transport, site: Site, work: Path, tag: str,
 
 
 def rollback(tr: Transport, site: Site, work: Path, tag: str = "") -> dict:
-    """Restore the server from the backup archive taken before a deployment."""
+    """Put the server back.
+
+    Two routes, tried in order:
+
+    1. the archive taken on the server immediately before the deployment
+    2. the commit history, if no such archive exists
+
+    The second route matters because a site configured without a ``backup``
+    path would otherwise have no way back at all. Git already holds every
+    version we deployed, so we can rebuild from it.
+    """
     work = Path(work)
     manifest = read_manifest(work)
     tag = tag or manifest.get("tag", "")
@@ -353,19 +393,53 @@ def rollback(tr: Transport, site: Site, work: Path, tag: str = "") -> dict:
     if not backup_path and site.backup and tag:
         backup_path = f"{site.backup}/{tag.replace('/', '-')}.tgz"
 
-    if not backup_path or not tr.run(f"test -f {quote(backup_path)}").ok:
+    if backup_path and tr.run(f"test -f {quote(backup_path)}").ok:
+        listing = tr.run(f"tar tzf {quote(backup_path)}")
+        count = len([line for line in listing.out.splitlines()
+                     if line.strip() and not line.endswith("/")])
+        tr.run(f"tar xzf {quote(backup_path)} -C {quote(site.remote)}").check("restore")
+        return {"restored": count, "tag": tag, "source": "remote-backup",
+                "message": t("sync.rollback_done", count=count, tag=tag)}
+
+    return _rollback_from_git(tr, site, work, tag)
+
+
+def _rollback_from_git(tr: Transport, site: Site, work: Path, tag: str) -> dict:
+    """Rebuild the state the server held before the deployment being undone."""
+    git = Git(work)
+    manifest = read_manifest(work)
+
+    # The commit the server was at before the deployment we are undoing.
+    ref = manifest.get("previous") or ""
+    if not ref or not git("rev-parse", "--verify", "-q", ref, check=False):
         raise RuntimeError(t("sync.no_backup", tag=tag or "?"))
 
-    listing = tr.run(f"tar tzf {quote(backup_path)}")
-    count = len([line for line in listing.out.splitlines()
-                 if line.strip() and not line.endswith("/")])
+    wanted = [f for f in (manifest.get("files") or {})
+              if not f.startswith(MANIFEST_DIR + "/")]
+    if not wanted:
+        raise RuntimeError(t("sync.no_backup", tag=tag))
 
-    tr.run(
-        f"tar xzf {quote(backup_path)} -C {quote(site.remote)}"
-    ).check("restore")
+    # Only ask for paths that existed at that point; git archive fails on the
+    # whole set otherwise. A file added by the deployment simply has nothing to
+    # roll back to.
+    present = [f for f in wanted
+               if git("ls-tree", "--name-only", ref, "--", f, check=False)]
+    if not present:
+        raise RuntimeError(t("sync.no_backup", tag=tag))
 
-    return {"restored": count, "tag": tag,
-            "message": t("sync.rollback_done", count=count, tag=tag)}
+    with tempfile.TemporaryDirectory() as tmp:
+        archive = Path(tmp) / "restore.tgz"
+        # git archive writes a tar of the exact recorded blobs, so binary files
+        # survive intact.
+        git("archive", "--format=tar.gz", "-o", str(archive), ref, "--", *present)
+
+        remote_archive = tr.tmp_path(f"sshpier-{site.name}-restore.tgz")
+        tr.put(archive, remote_archive)
+        tr.run(f"tar xzf {quote(remote_archive)} -C {quote(site.remote)}").check("restore")
+        tr.run(f"rm -f {quote(remote_archive)}")
+
+    return {"restored": len(present), "tag": tag, "source": "git-history",
+            "message": t("sync.rollback_done", count=len(present), tag=tag)}
 
 
 def status(tr: Transport, site: Site, work: Path) -> dict:

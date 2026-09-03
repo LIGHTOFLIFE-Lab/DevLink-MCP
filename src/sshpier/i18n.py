@@ -159,6 +159,13 @@ MESSAGES: dict[str, dict[str, str]] = {
         "cfg.shell_mode": "[{name}] shell transport — file upload and download are unavailable.",
         "cfg.no_whitelist": "[{name}] no command allowlist. A denylist is easy to work "
                             "around; consider setting 'allow' for production servers.",
+        "cfg.no_backup": "[{name}] no backup path set. Deployments will still be "
+                         "reversible from git history, but keeping a copy on the "
+                         "server itself is faster and survives losing this machine.",
+        "sync.pull_saved_local": "Uncommitted local changes were committed first "
+                                 "so the pull could not destroy them.",
+        "sync.rollback_from_git": "Restored from commit history (no backup archive "
+                                  "was on the server).",
         "cfg.skipped": "{name} (disabled)",
         "cfg.no_servers": "No usable connections. Check your settings.",
         "cfg.ini_missing": "servers.ini not found",
@@ -320,6 +327,11 @@ MESSAGES: dict[str, dict[str, str]] = {
         "cfg.shell_mode": "[{name}] shell 모드입니다 — 파일 업로드/다운로드를 쓸 수 없습니다.",
         "cfg.no_whitelist": "[{name}] 허용 목록이 없습니다. 차단 목록은 우회가 쉬우니 "
                             "운영 서버라면 allow 설정을 권합니다.",
+        "cfg.no_backup": "[{name}] 백업 경로가 없습니다. 깃 이력으로 되돌릴 수는 있지만, "
+                         "서버에도 사본을 두면 더 빠르고 이 PC 를 잃어도 남습니다.",
+        "sync.pull_saved_local": "커밋하지 않은 로컬 수정을 먼저 커밋했습니다. "
+                                 "수집이 그것을 지우지 않도록.",
+        "sync.rollback_from_git": "깃 이력에서 복원했습니다 (서버에 백업본이 없었습니다).",
         "cfg.skipped": "{name} (사용 안 함)",
         "cfg.no_servers": "사용 가능한 연결이 하나도 없습니다. 설정을 확인하세요.",
         "cfg.ini_missing": "servers.ini 가 없습니다",

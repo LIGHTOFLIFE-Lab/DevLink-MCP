@@ -130,6 +130,9 @@ def _sync_command(args, paths: Paths) -> int:
             print(t("sync.pull_start", name=site.name, host=site.host, remote=site.remote))
             result = sync.pull(tr, site, work)
             print(t("sync.pull_done", count=result["files"], path=result["path"]))
+            if result.get("saved_local"):
+                print(t("sync.pull_saved_local"))
+                print(f"    git checkout {result['saved_local'][:8]} -- <file>")
             print(t("sync.pull_changed") if result["changed"] else t("sync.pull_nochange"))
             return 0
 
@@ -143,7 +146,10 @@ def _sync_command(args, paths: Paths) -> int:
             return 0
 
         if args.command == "rollback":
-            print(sync.rollback(tr, site, work, tag=args.tag or "")["message"])
+            outcome = sync.rollback(tr, site, work, tag=args.tag or "")
+            print(outcome["message"])
+            if outcome.get("source") == "git-history":
+                print(t("sync.rollback_from_git"))
             return 0
 
         state = sync.status(tr, site, work)

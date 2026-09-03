@@ -102,6 +102,33 @@ sshpier rollback web1             # put the server back
 return to, and it is when you find out that someone changed the server since
 you last looked.
 
+## What is backed up, and when
+
+Backups are not a step you have to remember. Every operation that could lose
+work takes a copy first.
+
+| Moment | What is preserved | Where |
+|---|---|---|
+| `pull`, with uncommitted local edits | your edits, committed as `wip:` before the working copy is replaced | git history |
+| `pull` | the server's state at that moment | a commit |
+| `deploy` | the server files about to be overwritten | an archive under `backup`, plus the deploy tag |
+| `deploy` | what you deployed | a git tag |
+| `rollback` | — | restores the archive, or rebuilds from history if there is none |
+
+Two consequences worth knowing:
+
+**A site without a `backup` path is still reversible.** `rollback` falls back to
+the commit history and re-deploys the previous version. Setting `backup` is
+still worth it — restoring from the server is faster and survives losing your
+machine — so `sshpier check` warns when it is missing.
+
+**Changes made outside sshpier are not backed up.** If an assistant edits a file
+through the MCP connection, or you upload with an SFTP client, that write does
+not pass through any of this. sshpier will notice on the next `deploy` and
+refuse rather than overwrite, and `pull` will bring the change into git — but
+the write itself had no safety net. Work through `pull` / `deploy` when you
+want the guarantee.
+
 ## Importing from WinSCP
 
 WinSCP exports either an INI file (Tools > Export/Backup Configuration) or a

@@ -257,6 +257,9 @@ def _build(name: str, section, warnings: list[str]) -> tuple[dict, dict]:
 
     entry["allowedRemotePaths"] = [p for p in dict.fromkeys([remote, backup]) if p]
 
+    if not backup:
+        warnings.append(t("cfg.no_backup", name=name))
+
     if mode == "shell":
         entry["transportMode"] = "shell"
         entry["shellReadyTimeoutMs"] = 15000
