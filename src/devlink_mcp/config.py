@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """``servers.ini`` — reading, validating, and turning it into MCP config.
 
@@ -7,7 +7,7 @@ One human-editable file describes every server. From it we generate:
 ``ssh-mcp-config.json``
     consumed by an MCP SSH server, with safety rails filled in automatically
 ``sites.json``
-    consumed by :mod:`sshpier.sync` for pulling and deploying
+    consumed by :mod:`devlink_mcp.sync` for pulling and deploying
 
 Keeping one source of truth means the person maintains six lines per server
 instead of a nested JSON document, and the rails cannot drift out of sync.
@@ -118,13 +118,13 @@ class Paths:
 
     @classmethod
     def discover(cls, explicit: str | os.PathLike | None = None) -> "Paths":
-        """Root directory: argument, then ``SSHPIER_HOME``, then ``~/.sshpier``."""
+        """Root directory: argument, then ``DEVLINK_HOME``, then ``~/.devlink``."""
         if explicit:
             return cls(Path(explicit))
-        env = os.environ.get("SSHPIER_HOME")
+        env = os.environ.get("DEVLINK_HOME")
         if env:
             return cls(Path(env))
-        return cls(Path.home() / ".sshpier")
+        return cls(Path.home() / ".devlink")
 
 
 # --------------------------------------------------------------------------

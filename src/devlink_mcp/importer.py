@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """Turn parsed WinSCP sessions into a ``servers.ini`` file."""
 
@@ -10,7 +10,7 @@ from pathlib import Path
 from .config import DEFAULT_EXCLUDE
 from .i18n import t
 
-HEADER = """; sshpier servers
+HEADER = """; devlink servers
 ;
 ; This file holds passwords. Keep it out of version control.
 ; Generated {when}
@@ -19,7 +19,7 @@ HEADER = """; sshpier servers
 port    = 22
 mode    = exec
 exclude = {exclude}
-backup  = /var/backup/sshpier
+backup  = /var/backup/devlink
 """
 
 

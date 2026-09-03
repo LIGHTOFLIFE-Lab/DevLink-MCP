@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import json
 
 import pytest
 
-from sshpier import config
-from sshpier.config import Paths
+from devlink_mcp import config
+from devlink_mcp.config import Paths
 
 
 def write_ini(tmp_path, text: str) -> Paths:
@@ -169,6 +169,6 @@ def test_unreadable_file_is_reported_not_raised(tmp_path):
 
 
 def test_paths_discovery_prefers_environment(tmp_path, monkeypatch):
-    monkeypatch.setenv("SSHPIER_HOME", str(tmp_path / "custom"))
+    monkeypatch.setenv("DEVLINK_HOME", str(tmp_path / "custom"))
     assert Paths.discover().root == (tmp_path / "custom").resolve()
     assert Paths.discover(tmp_path / "explicit").root == (tmp_path / "explicit").resolve()

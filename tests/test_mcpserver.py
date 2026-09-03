@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """The MCP server, driven over the real JSON-RPC protocol."""
 
@@ -9,10 +9,10 @@ import json
 
 import pytest
 
-from sshpier import mcpserver
-from sshpier.config import Paths
-from sshpier.mcpserver import Server
-from sshpier.transport import LocalTransport
+from devlink_mcp import mcpserver
+from devlink_mcp.config import Paths
+from devlink_mcp.mcpserver import Server
+from devlink_mcp.transport import LocalTransport
 
 INI = """
 [DEFAULT]
@@ -81,7 +81,7 @@ def test_initialize_handshake(server):
     result = response["result"]
     assert result["protocolVersion"] == mcpserver.PROTOCOL_VERSION
     assert "tools" in result["capabilities"]
-    assert result["serverInfo"]["name"] == "sshpier"
+    assert result["serverInfo"]["name"] == "devlink-mcp"
 
 
 def test_notifications_get_no_response(server):

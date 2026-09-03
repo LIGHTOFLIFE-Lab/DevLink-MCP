@@ -1,4 +1,4 @@
-sshpier
+DevLink-MCP
 Copyright 2026 kimajun0919
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@ limitations under the License.
 --------------------------------------------------------------------------
 
 This product includes an implementation of the WinSCP stored-password
-obfuscation scheme (src/sshpier/winscp.py), written from the publicly
+obfuscation scheme (src/devlink_mcp/winscp.py), written from the publicly
 documented algorithm so that users can migrate their own saved sessions.
 It is not derived from WinSCP source code. WinSCP is a separate work by
 Martin Prikryl, distributed under the GNU GPL; this project bundles no

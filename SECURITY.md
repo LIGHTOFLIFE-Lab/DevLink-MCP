@@ -9,7 +9,7 @@ within a few days and keep you informed while a fix is prepared.
 
 ## What this tool is, and is not
 
-sshpier is a convenience layer for someone who already has full administrative
+DevLink-MCP is a convenience layer for someone who already has full administrative
 access to the servers involved. It does not add a trust boundary. Everything
 below follows from that.
 
@@ -31,7 +31,7 @@ What follows from that:
 
 ### WinSCP password recovery
 
-`src/sshpier/winscp.py` implements WinSCP's stored-password obfuscation so that
+`src/devlink_mcp/winscp.py` implements WinSCP's stored-password obfuscation so that
 saved sessions can be migrated in one step.
 
 This is not an attack on WinSCP. Without a master password, WinSCP stores
@@ -58,7 +58,7 @@ expression matching on a command string, and it can be evaded — by quoting
 mistakes, not attackers.
 
 For a server that matters, set `allow` (an allowlist). An allowlist fails
-closed; a denylist fails open. sshpier warns on every connection that has no
+closed; a denylist fails open. DevLink-MCP warns on every connection that has no
 allowlist for exactly this reason.
 
 ### Host keys
@@ -68,7 +68,7 @@ recorded. This matches what an SFTP client does when you click through the
 first-connection dialog. It means the first connection to a host is
 unauthenticated and could in principle be intercepted. If that matters for your
 environment, connect once with your normal SSH client and verify the
-fingerprint, so that the key is already in `known_hosts` before sshpier runs.
+fingerprint, so that the key is already in `known_hosts` before DevLink-MCP runs.
 
 ### The settings panel
 

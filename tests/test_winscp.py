@@ -1,10 +1,10 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import random
 
-from sshpier import winscp
+from devlink_mcp import winscp
 
 _HEX = "0123456789ABCDEF"
 

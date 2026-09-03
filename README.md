@@ -1,8 +1,8 @@
-# sshpier
+# DevLink-MCP
 
 A local control panel for the servers you maintain.
 
-Describe your servers once in a plain text file. From that, sshpier hands a
+Describe your servers once in a plain text file. From that, DevLink-MCP hands a
 locked-down configuration to an MCP server so an AI assistant can work on those
 machines, pulls a site down so you can edit it in your own editor, and puts
 your changes back with git as the undo button.
@@ -21,7 +21,7 @@ sessions in an SFTP client, and you edit files on the server because setting up
 a local copy for each one is not worth it. That works until the day you
 overwrite something and there is no way back.
 
-sshpier is the small amount of structure that removes that risk without
+DevLink-MCP is the small amount of structure that removes that risk without
 changing how you work:
 
 - **One config, many consumers.** `servers.ini` is the only file you maintain.
@@ -33,7 +33,7 @@ changing how you work:
 - **Deployments you can undo.** Only changed files are uploaded, the files
   about to be overwritten are backed up on the server first, and every
   deployment is a git tag.
-- **It notices when someone else edited the server.** Before writing, sshpier
+- **It notices when someone else edited the server.** Before writing, DevLink-MCP
   compares the server against what it recorded last time. If a colleague — or
   the client — changed a file directly, it stops instead of destroying their
   work.
@@ -41,8 +41,8 @@ changing how you work:
 ## Install
 
 ```bash
-pip install sshpier          # settings panel, config, MCP server (no Node.js)
-pip install 'sshpier[sync]'  # adds pull / deploy / rollback (needs paramiko)
+pip install devlink-mcp          # settings panel, config, MCP server (no Node.js)
+pip install 'devlink-mcp[sync]'  # adds pull / deploy / rollback (needs paramiko)
 ```
 
 Python 3.9 or newer. The panel and config generation use only the standard
@@ -51,8 +51,8 @@ library; `paramiko` is needed only to talk to a server.
 ## Quick start
 
 ```bash
-sshpier init     # create the directory layout
-sshpier gui      # open the settings panel in your browser
+devlink init     # create the directory layout
+devlink gui      # open the settings panel in your browser
 ```
 
 The panel walks through it: check your environment, add servers (or import
@@ -61,9 +61,9 @@ them from WinSCP in one step), then register with your MCP client.
 Prefer the terminal:
 
 ```bash
-sshpier import ~/Desktop/WinSCP.ini   # bring your saved sessions over
-sshpier check                         # validate without writing
-sshpier build                         # write the MCP config
+devlink import ~/Desktop/WinSCP.ini   # bring your saved sessions over
+devlink check                         # validate without writing
+devlink build                         # write the MCP config
 ```
 
 ## A server entry
@@ -76,9 +76,9 @@ exclude = data/, uploads/, cache/, *.log, node_modules/, .env
 [web1]
 host     = 10.0.0.1
 user     = deploy
-key      = ~/.sshpier/config/keys/web1.pem
+key      = ~/.devlink/config/keys/web1.pem
 remote   = /var/www/html
-backup   = /var/backup/sshpier
+backup   = /var/backup/devlink
 allow    = ^ls( .*)?|^cat .*|^grep .*
 ```
 
@@ -91,11 +91,11 @@ Full reference: [`examples/servers.example.ini`](examples/servers.example.ini).
 ## Working on a site
 
 ```bash
-sshpier pull web1                 # fetch the current server state, commit it
+devlink pull web1                 # fetch the current server state, commit it
 # ... edit locally, commit as you like ...
-sshpier deploy web1               # upload only what changed, tag it
-sshpier status web1               # local vs server vs last deployment
-sshpier rollback web1             # put the server back
+devlink deploy web1               # upload only what changed, tag it
+devlink status web1               # local vs server vs last deployment
+devlink rollback web1             # put the server back
 ```
 
 `pull` first is not a formality. It is what gives `rollback` something to
@@ -120,22 +120,22 @@ Two consequences worth knowing:
 **A site without a `backup` path is still reversible.** `rollback` falls back to
 the commit history and re-deploys the previous version. Setting `backup` is
 still worth it — restoring from the server is faster and survives losing your
-machine — so `sshpier check` warns when it is missing.
+machine — so `devlink check` warns when it is missing.
 
-**Uploads through MCP are backed up too.** sshpier is the MCP server, so when
+**Uploads through MCP are backed up too.** DevLink-MCP is the MCP server, so when
 an assistant writes a file, the version being replaced is copied into the
 site's backup directory first. There is no configuration for this and no way to
 forget it.
 
 **Writes from other tools are not.** An SFTP client, or a different MCP server,
-bypasses all of this. sshpier will notice on the next `deploy` and refuse rather
+bypasses all of this. DevLink-MCP will notice on the next `deploy` and refuse rather
 than overwrite, and `pull` brings the change into git — but that write itself
 had no safety net.
 
 ## Importing from WinSCP
 
 WinSCP exports either an INI file (Tools > Export/Backup Configuration) or a
-registry dump. sshpier reads both, and decides which is which by looking at the
+registry dump. DevLink-MCP reads both, and decides which is which by looking at the
 contents rather than the file extension.
 
 Host, port, user, key path and proxy come across. **Saved passwords come across
@@ -150,9 +150,9 @@ Two things worth being explicit about, so you can decide for yourself.
 can read the passwords. Key authentication avoids this and is what the examples
 use. Keep the config directory readable only by you.
 
-**sshpier can decrypt WinSCP's saved passwords.** Without a master password,
+**DevLink-MCP can decrypt WinSCP's saved passwords.** Without a master password,
 WinSCP stores them with a reversible obfuscation rather than encryption. The
-implementation is in [`src/sshpier/winscp.py`](src/sshpier/winscp.py), written
+implementation is in [`src/devlink_mcp/winscp.py`](src/devlink_mcp/winscp.py), written
 from the published algorithm; it contains no WinSCP code. It exists so that
 migrating fifty sessions does not mean retyping fifty passwords. If you would
 rather not have that capability installed, delete the body of
@@ -164,24 +164,24 @@ More in [SECURITY.md](SECURITY.md).
 ## How the pieces fit
 
 ```
-                    ┌──► sshpier serve ──► your MCP client ──► assistant
-servers.ini ──► sshpier
+                    ┌──► devlink serve ──► your MCP client ──► assistant
+servers.ini ──► DevLink-MCP
                     └──► pull / deploy / rollback ──► sites/<name>/  (a git repo)
 ```
 
-`sshpier serve` is an MCP server in its own right, speaking JSON-RPC over stdio
+`devlink serve` is an MCP server in its own right, speaking JSON-RPC over stdio
 and SSH over paramiko. It offers four tools — `list-servers`,
 `execute-command`, `upload`, `download` — and applies the allowlist, denylist,
 path limits, timeouts and output caps from your config. There is no Node.js
 anywhere in this.
 
-`sshpier build` still writes `ssh-mcp-config.json` for people who would rather
+`devlink build` still writes `ssh-mcp-config.json` for people who would rather
 point [`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server)
-at it. That server has no upload backups, which is why sshpier grew its own.
+at it. That server has no upload backups, which is why DevLink-MCP grew its own.
 
 ## Layout
 
-`$SSHPIER_HOME` (default `~/.sshpier`):
+`$DEVLINK_HOME` (default `~/.devlink`):
 
 ```
 config/

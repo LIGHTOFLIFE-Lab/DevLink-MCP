@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """The settings panel, exercised over real HTTP."""
 
@@ -14,13 +14,13 @@ from html.parser import HTMLParser
 
 import pytest
 
-from sshpier import gui
-from sshpier.config import Paths
+from devlink_mcp import gui
+from devlink_mcp.config import Paths
 
 
 @pytest.fixture
 def panel(tmp_path, monkeypatch):
-    monkeypatch.setenv("SSHPIER_MCP_CONFIG", str(tmp_path / "mcp" / "config.json"))
+    monkeypatch.setenv("DEVLINK_MCP_CONFIG", str(tmp_path / "mcp" / "config.json"))
     paths = Paths(tmp_path / "home")
     paths.ensure()
 
@@ -74,7 +74,7 @@ def test_api_requires_the_token(panel):
 def test_page_is_served_without_a_token(panel):
     with urllib.request.urlopen(panel.base + "/") as response:
         body = response.read().decode()
-    assert "<title>sshpier</title>" in body
+    assert "<title>DevLink-MCP</title>" in body
     assert "__TOKEN__" not in body, "token placeholder was not substituted"
     assert "__MESSAGES__" not in body
 
@@ -176,7 +176,7 @@ def test_register_merges_and_writes_without_bom(panel, tmp_path):
     assert not raw.startswith(b"\xef\xbb\xbf"), "wrote a BOM into JSON"
     data = json.loads(raw.decode("utf-8"))
     assert "other" in data["mcpServers"], "existing entry was dropped"
-    assert "ssh" in data["mcpServers"]
+    assert "devlink" in data["mcpServers"]
     assert any(p.name.startswith("config.json.bak-") for p in target.parent.iterdir())
 
     assert panel.get("/api/state")["registered"] is True
@@ -241,7 +241,7 @@ def test_every_handler_is_defined():
 
 
 def test_every_message_key_exists():
-    from sshpier.i18n import MESSAGES
+    from devlink_mcp.i18n import MESSAGES
 
     used = set(re.findall(r'T\("([\w.]+)"', gui.PAGE))
     used |= set(re.findall(r'setText\("[^"]+","([\w.]+)"\)', gui.PAGE))
@@ -250,7 +250,7 @@ def test_every_message_key_exists():
 
 
 def test_korean_catalogue_covers_english():
-    from sshpier.i18n import MESSAGES
+    from devlink_mcp.i18n import MESSAGES
 
     missing = set(MESSAGES["en"]) - set(MESSAGES["ko"])
     assert missing == set(), f"untranslated keys: {sorted(missing)}"

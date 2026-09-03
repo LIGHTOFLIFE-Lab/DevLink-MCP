@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """End-to-end tests for pull / deploy / rollback against a local fake server."""
 
@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
-from sshpier import sync
-from sshpier.sync import Git, Site
-from sshpier.transport import LocalTransport
+from devlink_mcp import sync
+from devlink_mcp.sync import Git, Site
+from devlink_mcp.transport import LocalTransport
 
 
 @pytest.fixture(autouse=True)

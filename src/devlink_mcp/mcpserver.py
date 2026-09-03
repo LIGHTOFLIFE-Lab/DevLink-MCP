@@ -1,8 +1,8 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """An MCP server that speaks SSH, over stdio.
 
-Why sshpier ships its own rather than configuring somebody else's: we already
+Why DevLink-MCP ships its own rather than configuring somebody else's: we already
 hold the connection details and a working SSH transport, so the remaining piece
 is a JSON-RPC loop. Owning it buys three things that matter here.
 
@@ -45,7 +45,7 @@ __all__ = ["serve", "Server"]
 
 
 def log(message: str) -> None:
-    print(f"[sshpier] {message}", file=sys.stderr, flush=True)
+    print(f"[devlink] {message}", file=sys.stderr, flush=True)
 
 
 # --------------------------------------------------------------------------
@@ -338,7 +338,7 @@ class Server:
             return self._ok(msg_id, {
                 "protocolVersion": PROTOCOL_VERSION,
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "sshpier", "version": __version__},
+                "serverInfo": {"name": "devlink-mcp", "version": __version__},
             })
 
         if method in ("notifications/initialized", "initialized", "notifications/cancelled"):

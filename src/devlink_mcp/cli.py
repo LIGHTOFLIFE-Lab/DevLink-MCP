@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """Command line entry point."""
 
@@ -34,16 +34,16 @@ def example_config() -> str:
 
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("--home", help="Root directory (default: $SSHPIER_HOME or ~/.sshpier)")
+    parser.add_argument("--home", help="Root directory (default: $DEVLINK_HOME or ~/.devlink)")
     parser.add_argument("--lang", choices=["en", "ko"], help="Message language")
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="sshpier",
+        prog="devlink",
         description="Configure SSH servers for MCP, pull sites, deploy with rollback.",
     )
-    parser.add_argument("--version", action="version", version=f"sshpier {__version__}")
+    parser.add_argument("--version", action="version", version=f"devlink-mcp {__version__}")
     _add_common(parser)
     sub = parser.add_subparsers(dest="command")
 

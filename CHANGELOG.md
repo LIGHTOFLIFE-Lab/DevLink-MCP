@@ -8,15 +8,15 @@ Notable changes to this project. The format follows
 
 ### Added
 
-- `sshpier serve` — sshpier is now an MCP server itself, over stdio, using
+- `devlink serve` — DevLink-MCP is now an MCP server itself, over stdio, using
   paramiko. Node.js is no longer required anywhere.
 - Uploads through MCP copy the file they replace into the site's backup
   directory before writing.
 
 ### Changed
 
-- The settings panel registers `sshpier serve` with the MCP client instead of
-  an external Node package. `sshpier build` still writes `ssh-mcp-config.json`
+- The settings panel registers `devlink serve` with the MCP client instead of
+  an external Node package. `devlink build` still writes `ssh-mcp-config.json`
   for anyone who prefers that server.
 - The environment check no longer asks for Node.js or npx; it checks for
   paramiko instead.
@@ -32,10 +32,10 @@ First public release.
 - Automatic safety rails on every generated connection: destructive-command
   denylist, path allowlist limited to the directories named in the config,
   command timeout, and output cap.
-- Settings panel (`sshpier gui`) served from the standard library over
+- Settings panel (`devlink gui`) served from the standard library over
   loopback, gated by a per-run token. Environment check, server list, WinSCP
   import, key upload, and MCP client registration.
-- `sshpier pull` / `deploy` / `rollback` / `status`. Deployments send only
+- `devlink pull` / `deploy` / `rollback` / `status`. Deployments send only
   changed files, back up the files they will overwrite on the server first, and
   tag the commit.
 - Drift detection: deploy stops if the server no longer matches what was
@@ -57,5 +57,5 @@ First public release.
 - MCP client configuration is written without a byte order mark, and the
   previous file is backed up first.
 
-[Unreleased]: https://github.com/kimajun0919/sshpier/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/kimajun0919/sshpier/releases/tag/v0.1.0
+[Unreleased]: https://github.com/kimajun0919/DevLink-MCP/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/kimajun0919/DevLink-MCP/releases/tag/v0.1.0

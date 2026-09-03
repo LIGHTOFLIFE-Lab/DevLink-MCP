@@ -1,11 +1,11 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import pytest
 
-from sshpier import cli
-from sshpier.config import Paths
+from devlink_mcp import cli
+from devlink_mcp.config import Paths
 
 
 def test_init_creates_layout_and_a_config(tmp_path, capsys):

@@ -1,10 +1,10 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """Message catalogue.
 
 English and Korean are both first-class. The language is chosen by, in order:
 
-1. ``SSHPIER_LANG`` environment variable (``en`` or ``ko``)
+1. ``DEVLINK_LANG`` environment variable (``en`` or ``ko``)
 2. the ``lang`` value in ``servers.ini``
 3. the operating system locale
 4. English
@@ -21,7 +21,7 @@ import os
 MESSAGES: dict[str, dict[str, str]] = {
     "en": {
         # --- app chrome -------------------------------------------------
-        "app.title": "sshpier",
+        "app.title": "DevLink-MCP",
         "app.subtitle": "Servers, sites, and deployments",
         "app.close": "Close this panel",
         "app.closed": "Panel closed. You can close this tab.",
@@ -39,7 +39,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "env.hint.git": "Needed for pulling and deploying sites",
         "env.hint.python": "",
         "env.paramiko": "paramiko",
-        "env.hint.paramiko": "Needed to reach servers. Install with: pip install 'sshpier[sync]'",
+        "env.hint.paramiko": "Needed to reach servers. Install with: pip install 'devlink-mcp[sync]'",
         # --- server list ------------------------------------------------
         "servers.title": "Servers",
         "servers.name": "Name",
@@ -180,7 +180,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         # --- sync --------------------------------------------------------
         "sync.no_site": "Unknown server: {name}",
         "sync.need_paramiko": "Remote transfer needs paramiko. Install it with:\n"
-                              "    pip install 'sshpier[sync]'",
+                              "    pip install 'devlink-mcp[sync]'",
         "sync.pull_start": "Collecting {name} from {host}:{remote}",
         "sync.pull_done": "Collected {count} file(s) into {path}",
         "sync.pull_nochange": "No change since the last pull.",
@@ -190,7 +190,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "sync.deploy_done": "Deployed {count} file(s). Tag: {tag}",
         "sync.deploy_drift": "Refusing to deploy: the server no longer matches the last "
                              "deployment. Someone changed these files directly:\n{files}\n"
-                             "Run 'sshpier pull' first to bring those changes into git.",
+                             "Run 'devlink pull' first to bring those changes into git.",
         "sync.backup_done": "Remote backup saved: {path}",
         "sync.rollback_done": "Restored {count} file(s) from {tag}.",
         "sync.no_backup": "No remote backup found for {tag}.",
@@ -200,7 +200,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "sync.status_undeployed": "Committed locally but not deployed:",
     },
     "ko": {
-        "app.title": "sshpier",
+        "app.title": "DevLink-MCP",
         "app.subtitle": "서버 · 사이트 · 배포",
         "app.close": "설정 화면 닫기",
         "app.closed": "설정 화면을 닫았습니다. 이 탭을 닫으셔도 됩니다.",
@@ -217,7 +217,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "env.hint.git": "사이트 수집·배포에 필요합니다",
         "env.hint.python": "",
         "env.paramiko": "paramiko",
-        "env.hint.paramiko": "Needed to reach servers. Install with: pip install 'sshpier[sync]'",
+        "env.hint.paramiko": "Needed to reach servers. Install with: pip install 'devlink-mcp[sync]'",
         "servers.title": "서버 목록",
         "servers.name": "이름",
         "servers.connection": "접속",
@@ -346,7 +346,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "cfg.open_failed": "{path} 를 열지 못했습니다: {error}",
         "sync.no_site": "모르는 서버입니다: {name}",
         "sync.need_paramiko": "원격 전송에는 paramiko 가 필요합니다. 설치하세요:\n"
-                              "    pip install 'sshpier[sync]'",
+                              "    pip install 'devlink-mcp[sync]'",
         "sync.pull_start": "{name} 수집 중 — {host}:{remote}",
         "sync.pull_done": "파일 {count}개를 {path} 로 가져왔습니다",
         "sync.pull_nochange": "지난 수집 이후 바뀐 것이 없습니다.",
@@ -356,7 +356,7 @@ MESSAGES: dict[str, dict[str, str]] = {
         "sync.deploy_done": "파일 {count}개를 배포했습니다. 태그: {tag}",
         "sync.deploy_drift": "배포를 중단합니다: 서버가 마지막 배포 상태와 다릅니다. "
                              "누군가 아래 파일을 서버에서 직접 고쳤습니다.\n{files}\n"
-                             "먼저 'sshpier pull' 로 그 변경을 깃에 들여오세요.",
+                             "먼저 'devlink pull' 로 그 변경을 깃에 들여오세요.",
         "sync.backup_done": "원격 백업 저장됨: {path}",
         "sync.rollback_done": "{tag} 에서 파일 {count}개를 복원했습니다.",
         "sync.no_backup": "{tag} 에 대한 원격 백업이 없습니다.",
@@ -372,7 +372,7 @@ _lang = ""
 
 def detect(preferred: str = "") -> str:
     """Pick a language code. Explicit setting wins, then env, then locale."""
-    for candidate in (preferred, os.environ.get("SSHPIER_LANG", "")):
+    for candidate in (preferred, os.environ.get("DEVLINK_LANG", "")):
         code = (candidate or "").strip().lower()[:2]
         if code in MESSAGES:
             return code

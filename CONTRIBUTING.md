@@ -5,8 +5,8 @@ Thanks for looking. Issues and pull requests are both welcome.
 ## Getting set up
 
 ```bash
-git clone https://github.com/kimajun0919/sshpier
-cd sshpier
+git clone https://github.com/kimajun0919/DevLink-MCP
+cd DevLink-MCP
 pip install -e '.[dev]'
 pytest
 ```
@@ -29,7 +29,7 @@ browser. Keep that up. Comments restating what the line does are noise; a
 comment explaining a decision someone might otherwise "simplify" away is worth
 its space.
 
-**Both languages.** Every user-visible string lives in `src/sshpier/i18n.py`.
+**Both languages.** Every user-visible string lives in `src/devlink_mcp/i18n.py`.
 Add the English and the Korean; a test fails if the Korean catalogue is missing
 a key. If you do not write Korean, add the English and say so in the PR — we
 will fill it in.

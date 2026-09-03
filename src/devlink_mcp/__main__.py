@@ -1,6 +1,6 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Allow ``python -m sshpier``."""
+"""Allow ``python -m devlink_mcp``."""
 
 from .cli import main
 

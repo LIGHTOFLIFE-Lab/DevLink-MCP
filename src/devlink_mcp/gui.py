@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """The settings panel: a local web page, served by the standard library.
 
@@ -42,7 +42,7 @@ from .i18n import catalogue, language, t
 
 MAX_UPLOAD = 4 * 1024 * 1024
 
-INI_HEADER = """; sshpier servers
+INI_HEADER = """; devlink servers
 ;
 ; This file holds passwords. It must stay out of version control.
 ; Edited by the settings panel; hand edits are fine but comments are not kept.
@@ -53,7 +53,7 @@ INI_HEADER = """; sshpier servers
 port    = 22
 mode    = exec
 exclude = {exclude}
-backup  = /var/backup/sshpier
+backup  = /var/backup/devlink
 """
 
 
@@ -230,7 +230,7 @@ def save_key(paths: Paths, name: str, raw: bytes) -> dict:
 
 def mcp_config_path() -> Path:
     """Where the MCP client keeps its server list."""
-    override = os.environ.get("SSHPIER_MCP_CONFIG")
+    override = os.environ.get("DEVLINK_MCP_CONFIG")
     if override:
         return Path(override)
     appdata = os.environ.get("APPDATA")
@@ -245,17 +245,17 @@ def mcp_config_path() -> Path:
 def launcher_command(paths: Paths) -> dict:
     """How the MCP client should start our SSH server.
 
-    ``sys.executable -m sshpier`` rather than the ``sshpier`` script: the script
+    ``sys.executable -m devlink_mcp`` rather than the ``devlink`` script: it
     may not be on PATH for a GUI application launched from a desktop shortcut,
     while the interpreter path always resolves.
     """
     return {
         "command": sys.executable,
-        "args": ["-m", "sshpier", "serve", "--home", str(paths.root)],
+        "args": ["-m", "devlink_mcp", "serve", "--home", str(paths.root)],
     }
 
 
-def is_registered(paths: Paths, name: str = "ssh") -> bool:
+def is_registered(paths: Paths, name: str = "devlink") -> bool:
     path = mcp_config_path()
     if not path.exists():
         return False
@@ -266,10 +266,10 @@ def is_registered(paths: Paths, name: str = "ssh") -> bool:
     entry = (data.get("mcpServers") or {}).get(name)
     if not entry:
         return False
-    return "sshpier" in " ".join(entry.get("args", []))
+    return "devlink_mcp" in " ".join(entry.get("args", []))
 
 
-def register(paths: Paths, name: str = "ssh") -> dict:
+def register(paths: Paths, name: str = "devlink") -> dict:
     path = mcp_config_path()
     data: dict = {}
     backup_name = ""
@@ -375,7 +375,7 @@ def import_sessions(paths: Paths, payload: dict) -> dict:
 def make_handler(paths: Paths, token: str):
 
     class Handler(http.server.BaseHTTPRequestHandler):
-        server_version = "sshpier"
+        server_version = "devlink-mcp"
 
         def log_message(self, fmt, *args):
             pass
@@ -533,7 +533,7 @@ def serve(paths: Paths, open_browser: bool = True, port: int = 0) -> int:
     with _Server(("127.0.0.1", port), handler) as httpd:
         bound = httpd.server_address[1]
         url = f"http://127.0.0.1:{bound}/?t={token}"
-        print("sshpier settings panel")
+        print("DevLink-MCP settings panel")
         print(f"  {url}", flush=True)
         print("  Ctrl+C to stop.", flush=True)
         if open_browser:
@@ -550,7 +550,7 @@ PAGE = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>sshpier</title>
+<title>DevLink-MCP</title>
 <style>
   :root{
     --bg:#f6f6f4; --card:#fff; --ink:#1a1a18; --dim:#6b6b66;

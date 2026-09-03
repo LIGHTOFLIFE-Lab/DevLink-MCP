@@ -1,4 +1,4 @@
-# Copyright 2026 sshpier contributors
+# Copyright 2026 DevLink-MCP contributors
 # SPDX-License-Identifier: Apache-2.0
 """Pull a site down, edit it locally, deploy it back — with git as the undo.
 
@@ -53,7 +53,7 @@ from .transport import Transport, quote
 
 __all__ = ["Site", "pull", "deploy", "rollback", "status", "Git"]
 
-MANIFEST_DIR = ".sshpier"
+MANIFEST_DIR = ".devlink"
 MANIFEST_NAME = "manifest.json"
 
 
@@ -265,7 +265,7 @@ def pull(tr: Transport, site: Site, work: Path, message: str = "",
         else:
             stashed = git.commit_all(message or f"wip: local changes before pull ({site.name})")
 
-    archive_remote = tr.tmp_path(f"sshpier-{site.name}-pull.tgz")
+    archive_remote = tr.tmp_path(f"devlink-{site.name}-pull.tgz")
     excludes = _tar_excludes(site.exclude)
 
     tr.run(
@@ -343,7 +343,7 @@ def deploy(tr: Transport, site: Site, work: Path, tag: str,
             for rel in files:
                 tar.add(work / rel, arcname=rel)
 
-        remote_archive = tr.tmp_path(f"sshpier-{site.name}-deploy.tgz")
+        remote_archive = tr.tmp_path(f"devlink-{site.name}-deploy.tgz")
         tr.put(local_archive, remote_archive)
         tr.run(
             f"tar xzf {quote(remote_archive)} -C {quote(site.remote)}"
@@ -433,7 +433,7 @@ def _rollback_from_git(tr: Transport, site: Site, work: Path, tag: str) -> dict:
         # survive intact.
         git("archive", "--format=tar.gz", "-o", str(archive), ref, "--", *present)
 
-        remote_archive = tr.tmp_path(f"sshpier-{site.name}-restore.tgz")
+        remote_archive = tr.tmp_path(f"devlink-{site.name}-restore.tgz")
         tr.put(archive, remote_archive)
         tr.run(f"tar xzf {quote(remote_archive)} -C {quote(site.remote)}").check("restore")
         tr.run(f"rm -f {quote(remote_archive)}")

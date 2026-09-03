@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "sshpier"
+name = "devlink-mcp"
 version = "0.1.0"
 description = "A local control panel for SSH servers: configure them for MCP, pull sites, edit locally, deploy with git-backed rollback."
 readme = "README.md"
@@ -41,21 +41,24 @@ sync = ["paramiko>=2.11"]
 dev = ["pytest>=7", "paramiko>=2.11"]
 
 [project.urls]
-Homepage = "https://github.com/kimajun0919/sshpier"
-Issues = "https://github.com/kimajun0919/sshpier/issues"
-Changelog = "https://github.com/kimajun0919/sshpier/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/kimajun0919/DevLink-MCP"
+Issues = "https://github.com/kimajun0919/DevLink-MCP/issues"
+Changelog = "https://github.com/kimajun0919/DevLink-MCP/blob/main/CHANGELOG.md"
 
 [project.scripts]
-sshpier = "sshpier.cli:main"
+# Short name for daily use; the full name so `pip install devlink-mcp` gives you
+# a command matching what you installed.
+devlink = "devlink_mcp.cli:main"
+devlink-mcp = "devlink_mcp.cli:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sshpier"]
+packages = ["src/devlink_mcp"]
 
 # Ship the example config inside the package rather than keeping a second copy
 # under src/, so the file in examples/ cannot drift away from the one that
-# `sshpier init` writes.
+# `devlink init` writes.
 [tool.hatch.build.targets.wheel.force-include]
-"examples/servers.example.ini" = "sshpier/data/servers.example.ini"
+"examples/servers.example.ini" = "devlink_mcp/data/servers.example.ini"
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "examples", "docs", "README.md", "LICENSE", "NOTICE",

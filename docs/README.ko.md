@@ -1,8 +1,8 @@
-# sshpier
+# DevLink-MCP
 
 관리하는 서버들을 한곳에서 다루는 로컬 도구.
 
-서버 정보를 평문 파일 하나에 적어두면, sshpier 가 그것으로 MCP 서버 설정을
+서버 정보를 평문 파일 하나에 적어두면, DevLink-MCP 가 그것으로 MCP 서버 설정을
 만들어 AI 어시스턴트가 그 장비들을 다룰 수 있게 하고, 사이트를 내려받아
 쓰던 편집기로 고치게 해주고, 깃을 되돌리기 삼아 변경분을 올려줍니다.
 
@@ -19,7 +19,7 @@ English: [../README.md](../README.md)
 사이트마다 로컬 사본을 만드는 게 품이 아까워 결국 서버에서 직접 고치게 됩니다.
 그러다 뭔가를 덮어쓰고 되돌릴 방법이 없는 날이 옵니다.
 
-sshpier 는 일하는 방식을 바꾸지 않으면서 그 위험만 걷어내는 최소한의 장치입니다.
+DevLink-MCP 는 일하는 방식을 바꾸지 않으면서 그 위험만 걷어내는 최소한의 장치입니다.
 
 - **설정 하나, 소비처 여럿.** 관리하는 파일은 `servers.ini` 하나뿐입니다.
   여기서 MCP 설정과 배포 설정이 생성되므로 둘이 어긋날 수 없습니다.
@@ -34,8 +34,8 @@ sshpier 는 일하는 방식을 바꾸지 않으면서 그 위험만 걷어내�
 ## 설치
 
 ```bash
-pip install sshpier          # 설정 화면 + 설정 생성 + MCP 서버 (Node.js 불필요)
-pip install 'sshpier[sync]'  # 수집/배포/롤백까지 (paramiko 필요)
+pip install devlink-mcp          # 설정 화면 + 설정 생성 + MCP 서버 (Node.js 불필요)
+pip install 'devlink-mcp[sync]'  # 수집/배포/롤백까지 (paramiko 필요)
 ```
 
 Python 3.9 이상. 화면과 설정 생성은 표준 라이브러리만 씁니다.
@@ -44,8 +44,8 @@ Python 3.9 이상. 화면과 설정 생성은 표준 라이브러리만 씁니�
 ## 시작하기
 
 ```bash
-sshpier init     # 폴더 골격 생성
-sshpier gui      # 브라우저에 설정 화면 열기
+devlink init     # 폴더 골격 생성
+devlink gui      # 브라우저에 설정 화면 열기
 ```
 
 화면이 순서대로 안내합니다. 실행 환경 점검 → 서버 추가(WinSCP 에서 한 번에
@@ -54,9 +54,9 @@ sshpier gui      # 브라우저에 설정 화면 열기
 터미널이 편하면:
 
 ```bash
-sshpier import ~/Desktop/WinSCP.ini   # 저장된 세션 가져오기
-sshpier check                         # 쓰지 않고 검사만
-sshpier build                         # MCP 설정 생성
+devlink import ~/Desktop/WinSCP.ini   # 저장된 세션 가져오기
+devlink check                         # 쓰지 않고 검사만
+devlink build                         # MCP 설정 생성
 ```
 
 ## 서버 한 개는 이렇게 생겼습니다
@@ -69,9 +69,9 @@ exclude = data/, uploads/, cache/, *.log, node_modules/, .env
 [web1]
 host     = 10.0.0.1
 user     = deploy
-key      = ~/.sshpier/config/keys/web1.pem
+key      = ~/.devlink/config/keys/web1.pem
 remote   = /var/www/html
-backup   = /var/backup/sshpier
+backup   = /var/backup/devlink
 allow    = ^ls( .*)?|^cat .*|^grep .*
 ```
 
@@ -84,11 +84,11 @@ allow    = ^ls( .*)?|^cat .*|^grep .*
 ## 사이트 작업
 
 ```bash
-sshpier pull web1                 # 서버의 현재 상태를 받아 커밋
+devlink pull web1                 # 서버의 현재 상태를 받아 커밋
 # ... 로컬에서 고치고 원하는 만큼 커밋 ...
-sshpier deploy web1               # 변경분만 올리고 태그
-sshpier status web1               # 로컬 · 서버 · 마지막 배포 비교
-sshpier rollback web1             # 서버를 되돌림
+devlink deploy web1               # 변경분만 올리고 태그
+devlink status web1               # 로컬 · 서버 · 마지막 배포 비교
+devlink rollback web1             # 서버를 되돌림
 ```
 
 `pull` 을 먼저 하는 건 형식이 아닙니다. 그게 `rollback` 이 돌아갈 지점을
@@ -110,13 +110,13 @@ sshpier rollback web1             # 서버를 되돌림
 
 **`backup` 경로가 없어도 되돌릴 수 있습니다.** `rollback` 이 깃 이력으로 물러나
 이전 버전을 다시 배포합니다. 그래도 `backup` 을 두는 편이 낫습니다 — 서버에서
-복원하는 게 빠르고 이 PC 를 잃어도 남으니까요. 그래서 `sshpier check` 가 없으면 경고합니다.
+복원하는 게 빠르고 이 PC 를 잃어도 남으니까요. 그래서 `devlink check` 가 없으면 경고합니다.
 
-**MCP 업로드도 백업됩니다.** sshpier 자체가 MCP 서버이므로, 어시스턴트가 파일을
+**MCP 업로드도 백업됩니다.** DevLink-MCP 자체가 MCP 서버이므로, 어시스턴트가 파일을
 쓰면 덮어쓰일 버전이 먼저 백업 폴더로 복사됩니다. 설정할 것도 없고 잊을 방법도 없습니다.
 
 **다른 도구로 쓴 것은 백업되지 않습니다.** SFTP 클라이언트나 다른 MCP 서버는 이
-흐름을 타지 않습니다. 다음 `deploy` 때 sshpier 가 알아채고 덮어쓰기를 거부하며
+흐름을 타지 않습니다. 다음 `deploy` 때 DevLink-MCP 가 알아채고 덮어쓰기를 거부하며
 `pull` 로 깃에 들일 수는 있지만, 그 쓰기 자체에는 안전망이 없었습니다.
 
 ## WinSCP 에서 가져오기
@@ -135,9 +135,9 @@ WinSCP 는 INI 파일(도구 > 환경 설정 내보내기/백업)이나 레지�
 사람은 비밀번호를 읽을 수 있습니다. 개인키 인증을 쓰면 이 문제가 없고,
 예시도 그렇게 되어 있습니다. config 폴더는 본인만 읽도록 두세요.
 
-**sshpier 는 WinSCP 저장 비밀번호를 복호화할 수 있습니다.** 마스터 비밀번호가
+**DevLink-MCP 는 WinSCP 저장 비밀번호를 복호화할 수 있습니다.** 마스터 비밀번호가
 없으면 WinSCP 는 비밀번호를 암호화가 아니라 가역 난독화로 저장합니다.
-구현은 [`src/sshpier/winscp.py`](../src/sshpier/winscp.py) 에 있고 공개된
+구현은 [`src/devlink_mcp/winscp.py`](../src/devlink_mcp/winscp.py) 에 있고 공개된
 알고리즘을 보고 새로 쓴 것으로, WinSCP 코드는 들어 있지 않습니다.
 세션 쉰 개를 옮기면서 비밀번호 쉰 개를 다시 타이핑하지 않기 위한 기능입니다.
 이 기능이 디스크에 있는 게 싫으시면 `decrypt_password` 의 본문을 지우세요.
@@ -148,23 +148,23 @@ WinSCP 는 INI 파일(도구 > 환경 설정 내보내기/백업)이나 레지�
 ## 구조
 
 ```
-                    ┌──► sshpier serve ──► MCP 클라이언트 ──► 어시스턴트
-servers.ini ──► sshpier
+                    ┌──► devlink serve ──► MCP 클라이언트 ──► 어시스턴트
+servers.ini ──► DevLink-MCP
                     └──► pull / deploy / rollback ──► sites/<이름>/  (깃 저장소)
 ```
 
-`sshpier serve` 는 그 자체가 MCP 서버입니다. stdio 로 JSON-RPC 를, paramiko 로
+`devlink serve` 는 그 자체가 MCP 서버입니다. stdio 로 JSON-RPC 를, paramiko 로
 SSH 를 말합니다. 도구 네 개(`list-servers`, `execute-command`, `upload`,
 `download`)를 제공하고 설정의 허용·차단 목록, 경로 제한, 타임아웃, 출력 상한을
 적용합니다. **Node.js 가 전혀 필요 없습니다.**
 
-`sshpier build` 는 여전히 `ssh-mcp-config.json` 을 만듭니다.
+`devlink build` 는 여전히 `ssh-mcp-config.json` 을 만듭니다.
 [`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server) 를
 쓰고 싶은 분을 위한 것인데, 그쪽은 업로드 백업이 없습니다. 그래서 직접 만들었습니다.
 
 ## 폴더 구조
 
-`$SSHPIER_HOME` (기본값 `~/.sshpier`):
+`$DEVLINK_HOME` (기본값 `~/.devlink`):
 
 ```
 config/
