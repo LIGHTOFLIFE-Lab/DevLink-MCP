@@ -8,6 +8,22 @@ Notable changes to this project. The format follows
 
 ### Added
 
+- `proxy` now works with the built-in MCP server: SOCKS5 and HTTP CONNECT,
+  implemented with the standard library. The WinSCP importer fills this setting
+  in automatically, so it could not stay unimplemented.
+- `template` (command wrapping) and `timeout` are honoured too.
+- Tests that run against a real SSH server, covering the transport, the whole
+  pull/deploy/rollback cycle, and the MCP tools.
+
+### Fixed
+
+- `mode = shell` was written into the config and then silently ignored.
+  `devlink check` and the server's startup log now say it is not supported here.
+- The first `pull` said the remote had changed since the last one, when there
+  had been no last one.
+
+### Added
+
 - The settings panel notices a newer release and shows a link. Checked once a
   day against the GitHub releases API, cached, and skipped entirely with
   `DEVLINK_NO_UPDATE_CHECK=1`. It never downloads or replaces anything.

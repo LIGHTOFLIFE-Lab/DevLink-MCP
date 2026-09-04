@@ -161,7 +161,7 @@ class SSHTransport(Transport):
 
     def __init__(self, host: str, port: int, user: str,
                  password: str = "", key_file: str = "", passphrase: str = "",
-                 timeout: int = 30):
+                 timeout: int = 30, proxy: str = "", command_template: str = ""):
         try:
             import paramiko
         except ImportError as exc:  # pragma: no cover - depends on install extras
@@ -174,6 +174,15 @@ class SSHTransport(Transport):
         # person already does in their SFTP client; it is not a substitute for
         # verifying a fingerprint on a server that matters.
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        # A proxy has to be dialled first; paramiko then speaks SSH over the
+        # socket we hand it.
+        sock = None
+        if proxy:
+            from .proxy import open_through_proxy
+            sock = open_through_proxy(proxy, host, int(port or 22), timeout)
+
+        self.command_template = command_template
 
         kwargs = {
             "hostname": host,
@@ -189,6 +198,8 @@ class SSHTransport(Transport):
                 kwargs["passphrase"] = passphrase
         if password:
             kwargs["password"] = password
+        if sock is not None:
+            kwargs["sock"] = sock
 
         self.client.connect(**kwargs)
         self._sftp = None
@@ -200,6 +211,7 @@ class SSHTransport(Transport):
         return self._sftp
 
     def run(self, command: str) -> Result:
+        command = apply_template(getattr(self, "command_template", ""), command)
         _, stdout, stderr = self.client.exec_command(command)
         out = stdout.read().decode("utf-8", "replace")
         err = stderr.read().decode("utf-8", "replace")
@@ -221,6 +233,22 @@ class SSHTransport(Transport):
         self.client.close()
 
 
+def apply_template(template: str, command: str) -> str:
+    """Wrap a command in the configured template.
+
+    ``su root -c <quotedCommand>`` and friends: the point is to run everything
+    as another user, inside a container, or through a jump host, without every
+    caller having to know about it.
+    """
+    if not template:
+        return command
+    if "<quotedCommand>" in template:
+        return template.replace("<quotedCommand>", quote(command))
+    if "<command>" in template:
+        return template.replace("<command>", command)
+    return command
+
+
 def connect(site: dict, secrets: dict | None = None) -> Transport:
     """Open a transport for one site definition."""
     secrets = secrets or {}
@@ -231,6 +259,8 @@ def connect(site: dict, secrets: dict | None = None) -> Transport:
         password=secrets.get("password", ""),
         key_file=secrets.get("key", ""),
         passphrase=secrets.get("passphrase", ""),
+        proxy=site.get("proxy", ""),
+        command_template=site.get("template", ""),
     )
 
 

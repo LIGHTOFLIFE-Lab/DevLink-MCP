@@ -63,6 +63,13 @@ class Connection:
         self._transport = None
         self._lock = threading.Lock()
 
+        # This server speaks exec, not an interactive login shell. A site
+        # configured for one would otherwise appear to work while ignoring the
+        # setting, which is how people end up debugging the wrong thing.
+        self.unsupported = []
+        if entry.get("transportMode") == "shell":
+            self.unsupported.append("mode = shell")
+
         self.allow = [re.compile(p) for p in entry.get("commandWhitelist", [])]
         self.deny = [re.compile(p) for p in entry.get("commandBlacklist", [])]
         self.allowed_paths = [p.rstrip("/") for p in entry.get("allowedRemotePaths", [])]
@@ -80,6 +87,9 @@ class Connection:
                     password=self.secrets.get("password", ""),
                     key_file=self.secrets.get("key", ""),
                     passphrase=self.secrets.get("passphrase", ""),
+                    timeout=int(self.entry.get("connectionTimeoutMs", 30000)) // 1000,
+                    proxy=self.entry.get("proxy", ""),
+                    command_template=self.entry.get("commandTemplate", ""),
                 )
             return self._transport
 
@@ -394,6 +404,10 @@ def serve(paths: Paths, stdin=None, stdout=None) -> int:
         return 1
 
     log(f"ready — {len(server.connections)} server(s): {', '.join(server.connections)}")
+    for name, conn in server.connections.items():
+        for setting in conn.unsupported:
+            log(f"warning: [{name}] '{setting}' is not supported by this server "
+                f"and will be ignored. Use the external ssh-mcp-server for it.")
     if any(not c.allow for c in server.connections.values()):
         log("warning: some servers have no command allowlist")
 

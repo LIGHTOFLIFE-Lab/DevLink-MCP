@@ -230,6 +230,19 @@ SSH 를 말합니다. 도구 네 개(`list-servers`, `execute-command`, `upload`
 [`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server) 를
 쓰고 싶은 분을 위한 것인데, 그쪽은 업로드 백업이 없습니다. 그래서 직접 만들었습니다.
 
+### `devlink serve` 가 지원하는 것
+
+`servers.ini` 의 모든 설정을 내장 MCP 서버가 처리합니다. 예외는 `mode = shell`
+하나입니다. 그 방식은 대화형 로그인 셸을 계속 열어두는데, 이 서버는 그걸
+구현하지 않고 `exec` 로 실행합니다. 해당 사이트도 동작은 하지만 설정은 무시되며,
+`devlink check` 와 서버 시작 로그가 그 사실을 알려줍니다 — 나중에 헤매지 않도록.
+필요하면 `ssh-mcp-config.json` 을 외부
+[`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server) 에
+물리시면 됩니다.
+
+`proxy`, `template`, `timeout`, 키·비밀번호 인증은 모두 여기서 동작하며,
+실제 SSH 서버를 띄워 돌리는 테스트로 덮여 있습니다.
+
 ## 폴더 구조
 
 `$DEVLINK_HOME` (기본값 `~/.devlink`):

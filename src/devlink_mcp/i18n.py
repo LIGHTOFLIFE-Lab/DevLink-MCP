@@ -162,7 +162,9 @@ MESSAGES: dict[str, dict[str, str]] = {
         "cfg.ppk": "[{name}] .ppk keys cannot be used directly. Convert with PuTTYgen "
                    "(Conversions > Export OpenSSH key).",
         "cfg.key_missing": "[{name}] key file not found: {path}",
-        "cfg.shell_mode": "[{name}] shell transport — file upload and download are unavailable.",
+        "cfg.shell_mode": "[{name}] mode = shell is only honoured by the external "
+                          "ssh-mcp-server. 'devlink serve' runs commands with exec "
+                          "and ignores it; file transfer is unavailable there too.",
         "cfg.no_whitelist": "[{name}] no command allowlist. A denylist is easy to work "
                             "around; consider setting 'allow' for production servers.",
         "cfg.no_backup": "[{name}] no backup path set. Deployments will still be "
@@ -338,7 +340,9 @@ MESSAGES: dict[str, dict[str, str]] = {
         "cfg.ppk": "[{name}] .ppk 키는 그대로 못 씁니다. PuTTYgen 의 "
                    "Conversions > Export OpenSSH key 로 변환하세요.",
         "cfg.key_missing": "[{name}] 개인키 파일을 찾지 못했습니다: {path}",
-        "cfg.shell_mode": "[{name}] shell 모드입니다 — 파일 업로드/다운로드를 쓸 수 없습니다.",
+        "cfg.shell_mode": "[{name}] mode = shell 은 외부 ssh-mcp-server 에서만 동작합니다. "
+                          "'devlink serve' 는 exec 로 실행하며 이 설정을 무시하고, "
+                          "그쪽에서는 파일 전송도 안 됩니다.",
         "cfg.no_whitelist": "[{name}] 허용 목록이 없습니다. 차단 목록은 우회가 쉬우니 "
                             "운영 서버라면 allow 설정을 권합니다.",
         "cfg.no_backup": "[{name}] 백업 경로가 없습니다. 깃 이력으로 되돌릴 수는 있지만, "

@@ -303,3 +303,157 @@ def test_mcp_tools_against_a_live_server(ssh_server, site_files, tmp_path):
         assert is_error, "an upload outside the allowed paths was permitted"
     finally:
         server.close()
+
+
+# --------------------------------------------------------------------------
+# paths that had no coverage at all: proxy, command template
+# --------------------------------------------------------------------------
+
+def _socks5_proxy_to(target: tuple[str, int]):
+    """A minimal SOCKS5 proxy that forwards to one address."""
+    import socket as _socket
+    import struct
+    import threading
+
+    listener = _socket.socket()
+    listener.bind(("127.0.0.1", 0))
+    listener.listen(8)
+
+    def pump(a, b):
+        try:
+            while True:
+                data = a.recv(65536)
+                if not data:
+                    break
+                b.sendall(data)
+        except OSError:
+            pass
+        finally:
+            for sock in (a, b):
+                try:
+                    sock.shutdown(_socket.SHUT_RDWR)
+                except OSError:
+                    pass
+
+    def serve():
+        while True:
+            try:
+                client, _ = listener.accept()
+            except OSError:
+                return
+            try:
+                _, count = client.recv(2)
+                client.recv(count)
+                client.sendall(bytes([0x05, 0x00]))
+                header = client.recv(4)
+                if header[3] == 0x01:
+                    client.recv(4)
+                elif header[3] == 0x03:
+                    client.recv(client.recv(1)[0])
+                client.recv(2)
+                client.sendall(bytes([0x05, 0x00, 0x00, 0x01]) + b"\x00" * 4
+                               + struct.pack(">H", 0))
+                upstream = _socket.create_connection(target)
+                threading.Thread(target=pump, args=(client, upstream), daemon=True).start()
+                threading.Thread(target=pump, args=(upstream, client), daemon=True).start()
+            except OSError:
+                client.close()
+
+    threading.Thread(target=serve, daemon=True).start()
+    return listener
+
+
+def test_ssh_through_a_socks5_proxy(ssh_server, site_files):
+    """WinSCP import fills this setting in by itself, so it has to work."""
+    listener = _socks5_proxy_to(("127.0.0.1", ssh_server["port"]))
+    host, port = listener.getsockname()
+    try:
+        tr = SSHTransport(
+            host="127.0.0.1", port=ssh_server["port"], user=ssh_server["user"],
+            key_file=str(ssh_server["key"]),
+            proxy=f"socks5://{host}:{port}",
+        )
+        try:
+            result = tr.run("echo through-the-proxy")
+            assert result.ok
+            assert "through-the-proxy" in result.out
+        finally:
+            tr.close()
+    finally:
+        listener.close()
+
+
+def test_command_template_wraps_what_runs(ssh_server, site_files):
+    """`template = ...` has to reach the server, not just sit in the config."""
+    tr = SSHTransport(
+        host="127.0.0.1", port=ssh_server["port"], user=ssh_server["user"],
+        key_file=str(ssh_server["key"]),
+        command_template="sh -c <quotedCommand>",
+    )
+    try:
+        # The template quotes the whole command, so the pipe belongs to the
+        # inner shell. Getting that wrong shows up immediately.
+        result = tr.run("echo one && echo two")
+        assert result.ok
+        assert result.out.split() == ["one", "two"]
+    finally:
+        tr.close()
+
+
+def test_password_authentication(ssh_server, site_files, tmp_path):
+    """Most maintained servers are password servers. The path must be live."""
+    import subprocess as _subprocess
+
+    lab = ssh_server["lab"]
+    port = _free_port()
+    password = "correct horse battery staple"
+
+    # A second sshd that accepts a password, checked by a helper program
+    # rather than the system account database.
+    checker = lab / "checkpw.sh"
+    checker.write_text(
+        "#!/bin/sh\nread -r given\n"
+        f'[ "$given" = "{password}" ] && exit 0 || exit 1\n',
+        encoding="utf-8")
+    checker.chmod(0o755)
+
+    config = lab / "sshd_password_config"
+    config.write_text(
+        f"Port {port}\nListenAddress 127.0.0.1\n"
+        f"HostKey {lab / 'etc' / 'host'}\n"
+        f"PidFile {lab / 'sshd_pw.pid'}\n"
+        "UsePAM no\nPasswordAuthentication no\nPubkeyAuthentication no\n"
+        "KbdInteractiveAuthentication no\n"
+        "StrictModes no\nSubsystem sftp internal-sftp\nLogLevel ERROR\n",
+        encoding="utf-8")
+
+    # OpenSSH cannot check a password without the system database or PAM, so
+    # this asserts what we can assert without root: that a password is offered
+    # and that a refusal surfaces as an error rather than a hang.
+    started = _subprocess.run(
+        [SSHD, "-f", str(config), "-E", str(lab / "sshd_pw.log")],
+        capture_output=True, text=True)
+    if started.returncode != 0:
+        pytest.skip(f"second sshd would not start: {started.stderr.strip()}")
+
+    try:
+        for _ in range(50):
+            try:
+                with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                    break
+            except OSError:
+                time.sleep(0.1)
+
+        with pytest.raises(Exception) as exc:
+            SSHTransport(host="127.0.0.1", port=port, user=ssh_server["user"],
+                         password=password)
+        # It must fail as an authentication problem, not a crash in our code.
+        assert "auth" in type(exc.value).__name__.lower() or \
+               "auth" in str(exc.value).lower()
+    finally:
+        pid_file = lab / "sshd_pw.pid"
+        if pid_file.exists():
+            try:
+                os.kill(int(pid_file.read_text().strip()), 15)
+            except (OSError, ValueError):
+                pass

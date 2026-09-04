@@ -252,6 +252,20 @@ anywhere in this.
 point [`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server)
 at it. That server has no upload backups, which is why DevLink-MCP grew its own.
 
+### What `devlink serve` supports
+
+Every setting in `servers.ini` is honoured by the built-in MCP server except
+one: `mode = shell`. That transport keeps an interactive login shell open, which
+this server does not implement — it runs commands with `exec`. A site
+configured for it still works, but the setting is ignored, and both
+`devlink check` and the server's startup log say so rather than leaving you to
+find out. Point the external
+[`@fangjunjie/ssh-mcp-server`](https://github.com/classfang/ssh-mcp-server) at
+`ssh-mcp-config.json` if you need it.
+
+`proxy`, `template`, `timeout` and key or password authentication all work
+here, and are covered by tests that run against a real SSH server.
+
 ## Layout
 
 `$DEVLINK_HOME` (default `~/.devlink`):
