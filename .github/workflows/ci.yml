@@ -40,8 +40,20 @@ jobs:
       - name: Install
         run: python -m pip install --upgrade pip && python -m pip install -e ".[dev]"
 
+      # The integration test needs an SSH server it can start itself. Linux
+      # runners have one; the test skips where they do not, so make it visible
+      # here whether it actually ran rather than silently skipping everywhere.
+      - name: Show what the integration test will do
+        shell: bash
+        run: |
+          if command -v sshd >/dev/null || [ -x /usr/sbin/sshd ]; then
+            echo "sshd present - the live SSH tests will run"
+          else
+            echo "no sshd - the live SSH tests will skip"
+          fi
+
       - name: Test
-        run: python -m pytest -q
+        run: python -m pytest -q -rs
 
   package:
     name: Build distribution

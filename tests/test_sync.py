@@ -333,3 +333,12 @@ def test_local_transport_uses_forward_slashes(tmp_path):
     """Git Bash on Windows needs C:/like/this, not backslashes."""
     tr = LocalTransport(tmp_path)
     assert "\\" not in tr._root_for_shell
+
+
+def test_pull_knows_when_it_is_the_first_time(tr, site, work):
+    """"The remote changed since the last pull" is alarming when there was none."""
+    first = sync.pull(tr, site, work)
+    assert first["first_time"] is True
+
+    second = sync.pull(tr, site, work)
+    assert second["first_time"] is False

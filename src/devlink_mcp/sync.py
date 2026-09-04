@@ -261,6 +261,11 @@ def pull(tr: Transport, site: Site, work: Path, message: str = "",
     """
     work = Path(work)
     git = Git(work)
+    # Whether this is the first collection has to be decided before init(),
+    # which creates an empty commit. Saying "the remote changed since the last
+    # pull" when there was no last pull reads as a warning about someone else's
+    # edit, which is alarming and wrong.
+    first_time = not (git.exists and git.has_commits())
     git.init()
 
     stashed = None
@@ -302,6 +307,7 @@ def pull(tr: Transport, site: Site, work: Path, message: str = "",
         "changed": bool(changed),
         "path": str(work),
         "saved_local": stashed,
+        "first_time": first_time,
     }
 
 

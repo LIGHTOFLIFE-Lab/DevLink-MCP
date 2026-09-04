@@ -136,7 +136,11 @@ def _sync_command(args, paths: Paths) -> int:
             if result.get("saved_local"):
                 print(t("sync.pull_saved_local"))
                 print(f"    git checkout {result['saved_local'][:8]} -- <file>")
-            print(t("sync.pull_changed") if result["changed"] else t("sync.pull_nochange"))
+            if result.get("first_time"):
+                print(t("sync.pull_first"))
+            else:
+                print(t("sync.pull_changed") if result["changed"]
+                      else t("sync.pull_nochange"))
             return 0
 
         if args.command == "deploy":

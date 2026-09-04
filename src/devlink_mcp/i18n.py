@@ -187,6 +187,8 @@ MESSAGES: dict[str, dict[str, str]] = {
                               "    pip install 'devlink-mcp[sync]'",
         "sync.pull_start": "Collecting {name} from {host}:{remote}",
         "sync.pull_done": "Collected {count} file(s) into {path}",
+        "sync.pull_first": "Collected for the first time. This is the baseline "
+                           "a rollback returns to.",
         "sync.pull_nochange": "No change since the last pull.",
         "sync.pull_changed": "Remote changed since the last pull — committed as a baseline.",
         "sync.deploy_none": "Nothing to deploy: no file changes since {ref}.",
@@ -357,6 +359,7 @@ MESSAGES: dict[str, dict[str, str]] = {
                               "    pip install 'devlink-mcp[sync]'",
         "sync.pull_start": "{name} 수집 중 — {host}:{remote}",
         "sync.pull_done": "파일 {count}개를 {path} 로 가져왔습니다",
+        "sync.pull_first": "처음 수집했습니다. 롤백이 돌아갈 기준선입니다.",
         "sync.pull_nochange": "지난 수집 이후 바뀐 것이 없습니다.",
         "sync.pull_changed": "지난 수집 이후 원격이 바뀌었습니다 — 기준선으로 커밋했습니다.",
         "sync.deploy_none": "배포할 것이 없습니다: {ref} 이후 변경된 파일이 없습니다.",
