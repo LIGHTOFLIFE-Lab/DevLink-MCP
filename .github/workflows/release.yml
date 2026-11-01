@@ -85,6 +85,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
+          # Short-lived job transfer; tagged installers remain in GitHub Releases.
+          retention-days: 1
           name: ${{ matrix.os }}
           path: |
             dist/*.dmg

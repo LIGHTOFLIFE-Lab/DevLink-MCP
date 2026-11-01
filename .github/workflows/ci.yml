@@ -68,5 +68,7 @@ jobs:
       - run: python -m twine check dist/*
       - uses: actions/upload-artifact@v4
         with:
+          # Keep diagnostics briefly instead of the 90-day default.
+          retention-days: 3
           name: dist
           path: dist/
